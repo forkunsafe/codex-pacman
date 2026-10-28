@@ -164,7 +164,13 @@ For Homebrew installations:
 brew upgrade forkunsafe/tap/codex-pacman
 ```
 
-Then refresh **only Codex Pac-Man** in SwiftBar so its streaming process loads the new code. The links follow the active Homebrew version without recopying files. Native settings and state remain in place. If a major update requires reconnecting the links, disable only this plugin and use `codex-pacman install --update` before re-enabling it.
+The links follow the active Homebrew version without recopying files. SwiftBar can cache the old launcher metadata, so after upgrading, Option-click the icon and disable only this plugin, then reconnect it:
+
+```sh
+codex-pacman install --update
+```
+
+Re-enable only Codex Pac-Man in SwiftBar. This refreshes the code links and metadata while preserving native settings and state; no files need to be copied manually.
 
 To uninstall, Option-click the icon and disable **only Codex Pac-Man**, then remove its user-level connection before removing the Homebrew program:
 
