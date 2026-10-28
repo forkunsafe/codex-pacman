@@ -23,6 +23,10 @@ SwiftBar source was checked at tag `v2.1.1` (`05cb6cb1123bc7227ee2b39f390f8bccb8
 
 Run `python3 -B -m unittest discover -s tests -v`. Fixtures are synthetic; RPC tests launch a small mock subprocess. See README for coverage. Installer tests use a temporary folder containing another plugin, preserve that plugin, preserve native settings on update, and remove only this plugin and its private state on uninstall. The shell launcher is checked with `sh -n`.
 
+## Homebrew packaging
+
+Version 1.0.1 adds the `codex-pacman` command and link-based installation for Homebrew. The automated suite contains 29 tests, including migration from a copied installation while retaining settings, stable links following a simulated Homebrew opt switch, and rollback after a failed module swap. These simulations are separate from real `brew install` and `brew test` checks.
+
 ## Limits of verification
 
 No real quota was intentionally exhausted or reset. Warning/exhausted rendering, uncertain recovery, first-start/restart suppression, malformed state, and RPC errors are covered by automated tests. Physical sleep/wake, Intel hardware, older Python versions, older Codex versions, missing-Python UI, long-duration use, and both macOS appearances have not been exercised end to end. Color readability is reinforced by a textual warning and native template imagery, but appearance-specific visual verification remains outstanding.

@@ -21,28 +21,49 @@ The app-server protocol can change with Codex upgrades. Unknown optional fields 
 
 ## Install
 
-1. Install Codex CLI, authenticate normally (`codex login`), and install SwiftBar. With Homebrew:
+### Homebrew (recommended)
 
-   ```sh
-   brew install --cask codex swiftbar
-   brew install python
-   codex login
-   ```
+Install Codex CLI and SwiftBar if needed, authenticate normally, and open SwiftBar to select its Plugin Folder:
 
-2. Open SwiftBar and select its Plugin Folder if this is your first launch.
-3. Download or clone this repository, then run from its root:
+```sh
+brew install --cask codex swiftbar
+codex login
+```
 
-   ```sh
-   python3 install.py
-   ```
+Then install Codex Pac-Man and connect it to SwiftBar:
 
-The installer discovers the existing SwiftBar Plugin Folder from SwiftBar preferences. To choose it explicitly:
+```sh
+brew install forkunsafe/tap/codex-pacman
+codex-pacman install
+```
+
+Homebrew installs Python and the program files. The second command discovers your existing SwiftBar Plugin Folder and adds only this plugin's launcher and hidden module directory as symlinks. Their targets use Homebrew's stable `opt` path, so upgrades do not pin the plugin to an old Cellar version. Native SwiftBar settings stay beside the launcher, and usage state stays in Application Support.
+
+Homebrew deliberately does not write to your personal SwiftBar folder during formula installation. There is no administrator prompt, service, or authentication step in `codex-pacman install`. Use `codex-pacman install --help` for options, including `--plugin-dir` and `--codex-home`.
+
+For an existing installation made with `install.py`, disable only Codex Pac-Man, migrate it, then re-enable it:
+
+```sh
+codex-pacman install --update
+```
+
+Existing native settings and state are preserved. Other plugins are untouched. The formula is distributed through the [forkunsafe Homebrew tap](https://github.com/forkunsafe/homebrew-tap), not Homebrew core.
+
+### Source archive or manual installation
+
+Without Homebrew, install Python 3.9+, download a [release archive](https://github.com/forkunsafe/codex-pacman/releases), extract it, and run from its root:
+
+```sh
+python3 install.py
+```
+
+To choose the folder explicitly:
 
 ```sh
 python3 install.py --plugin-dir "$HOME/My SwiftBar Plugins"
 ```
 
-No administrator privileges are needed. Only `codex-pacman.sh` and its hidden `.codex-pacman` module directory are installed. Other plugins are preserved. SwiftBar normally discovers the new plugin immediately. If needed, use SwiftBar's Reload Plugins action.
+Only `codex-pacman.sh` and its hidden `.codex-pacman` module directory are copied. Other plugins are preserved. SwiftBar normally discovers the new plugin immediately.
 
 Manual installation: copy **both** `plugin/codex-pacman.sh` and `plugin/.codex-pacman` to your Plugin Folder; keep the hidden directory. Make the launcher executable with `chmod +x`. A source archive is already a complete distribution; no build or dependency installation is necessary. Maintainers can produce a filtered distribution with `python3 tools/package.py`; the archive is written to `dist/` and excludes Git metadata, settings, state, and bytecode.
 
@@ -133,21 +154,36 @@ Only window usage, durations, reset timestamps, last successful update, a schema
 
 ## Update and uninstall
 
-Disable **only Codex Pac-Man** from its menu before updating or uninstalling, so the process can exit cleanly.
+For Homebrew installations:
+
+```sh
+brew upgrade forkunsafe/tap/codex-pacman
+```
+
+Then refresh **only Codex Pac-Man** in SwiftBar so its streaming process loads the new code. The links follow the active Homebrew version without recopying files. Native settings and state remain in place. If a major update requires reconnecting the links, disable only this plugin and use `codex-pacman install --update` before re-enabling it.
+
+To uninstall, disable **only Codex Pac-Man**, then remove its user-level connection before removing the Homebrew program:
+
+```sh
+codex-pacman uninstall
+brew uninstall codex-pacman
+```
+
+`brew uninstall` alone removes the program but intentionally does not delete user configuration or state; the SwiftBar links may be left dangling until you remove them manually or reinstall the formula and run `codex-pacman uninstall`.
+
+For a copied source installation, disable this plugin before updating, then run from the new source archive:
 
 ```sh
 python3 install.py --update
 ```
 
-Updates replace only plugin code and preserve native settings. Then re-enable this plugin in SwiftBar.
-
-To uninstall, run from this repository:
+To remove a source installation:
 
 ```sh
 python3 install.py --uninstall
 ```
 
-Use the same `--plugin-dir` if you supplied one during installation. This removes only `codex-pacman.sh`, `.codex-pacman`, `codex-pacman.vars.json`, and state for that plugin identity (including previously selected homes). Codex authentication, installation, and other SwiftBar plugins are untouched. The empty top-level state directory and SwiftBar-managed cache/metadata may remain.
+Use the same `--plugin-dir` if you supplied one during installation. Both uninstall commands remove only `codex-pacman.sh`, `.codex-pacman`, `codex-pacman.vars.json`, and state for that plugin identity (including previously selected homes). Linked program sources, Codex authentication, and other SwiftBar plugins are untouched. The empty top-level state directory and SwiftBar-managed cache/metadata may remain.
 
 Manual uninstall: disable this plugin, delete those three entries from your Plugin Folder, then remove `~/Library/Application Support/Codex Pac-Man` if you have no other instances. No Codex files should be deleted.
 
@@ -157,7 +193,7 @@ Manual uninstall: disable this plugin, delete those three entries from your Plug
 python3 -B -m unittest discover -s tests -v
 ```
 
-Tests use synthetic fixtures and a real mocked subprocess, without contacting Codex or reading account data. Coverage includes initialization and notification handling, both quota windows and optional metadata, bucket isolation, malformed/unsupported/oversized RPC, timeout/EOF cleanup, percentage boundaries, independent windows, resets, baseline/restart/recovery suppression, one animation per event, return to normal, stale/error output, template PNG shape, markup sanitation, configuration precedence, spaces, no account fallback, atomic/corrupt state, and installation/update/uninstallation preserving other plugins.
+Tests use synthetic fixtures and a real mocked subprocess, without contacting Codex or reading account data. Coverage includes initialization and notification handling, both quota windows and optional metadata, bucket isolation, malformed/unsupported/oversized RPC, timeout/EOF cleanup, percentage boundaries, independent windows, resets, baseline/restart/recovery suppression, one animation per event, return to normal, stale/error output, template PNG shape, markup sanitation, configuration precedence, spaces, no account fallback, atomic/corrupt state, and installation/update/uninstallation preserving other plugins. Homebrew integration tests cover the command entry point, migration from copied files while retaining settings, symlinks following an `opt` upgrade, and rollback if the module-link swap fails.
 
 See [verification notes](docs/verification.md) for the exact scope of live checks and unverified behavior. No unit test is a claim of visual macOS compatibility.
 

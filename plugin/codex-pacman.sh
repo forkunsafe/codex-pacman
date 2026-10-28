@@ -1,6 +1,6 @@
 #!/bin/sh
 # <xbar.title>Codex Pac-Man</xbar.title>
-# <xbar.version>1.0.0</xbar.version>
+# <xbar.version>1.0.1</xbar.version>
 # <xbar.author>forkunsafe</xbar.author>
 # <xbar.author.github>forkunsafe</xbar.author.github>
 # <xbar.abouturl>https://github.com/forkunsafe/codex-pacman</xbar.abouturl>

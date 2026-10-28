@@ -6,8 +6,9 @@ import tarfile
 root = Path(__file__).resolve().parents[1]
 destination = root/'dist'
 destination.mkdir(exist_ok=True)
-output = destination/'codex-pacman-1.0.0.tar.gz'
-allowed = ['README.md', 'LICENSE', '.gitignore', 'install.py', 'plugin', 'tests', 'docs', 'tools', '.github']
+version = (root/'VERSION').read_text().strip()
+output = destination/('codex-pacman-' + version + '.tar.gz')
+allowed = ['README.md', 'LICENSE', '.gitignore', 'install.py', 'cli.py', 'VERSION', 'plugin', 'tests', 'docs', 'tools', '.github']
 
 
 def filter_member(member):
