@@ -1,11 +1,16 @@
 #!/bin/sh
 # <xbar.title>Codex Pac-Man</xbar.title>
-# <xbar.version>1.0.1</xbar.version>
+# <xbar.version>1.0.2</xbar.version>
 # <xbar.author>forkunsafe</xbar.author>
 # <xbar.author.github>forkunsafe</xbar.author.github>
 # <xbar.abouturl>https://github.com/forkunsafe/codex-pacman</xbar.abouturl>
 # <xbar.dependencies>python3,codex</xbar.dependencies>
 # <xbar.desc>A tiny SwiftBar plugin that tracks your Codex limits — and eats them.</xbar.desc>
+# <swiftbar.hideAbout>true</swiftbar.hideAbout>
+# <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
+# <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>
+# <swiftbar.hideDisablePlugin>true</swiftbar.hideDisablePlugin>
+# <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 # <swiftbar.type>streamable</swiftbar.type>
 # <swiftbar.runInBash>false</swiftbar.runInBash>
 # <swiftbar.useTrailingStreamSeparator>true</swiftbar.useTrailingStreamSeparator>

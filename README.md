@@ -41,7 +41,7 @@ Homebrew installs Python and the program files. The second command discovers you
 
 Homebrew deliberately does not write to your personal SwiftBar folder during formula installation. There is no administrator prompt, service, or authentication step in `codex-pacman install`. Use `codex-pacman install --help` for options, including `--plugin-dir` and `--codex-home`.
 
-For an existing installation made with `install.py`, disable only Codex Pac-Man, migrate it, then re-enable it:
+For an existing installation made with `install.py`, Option-click its icon and disable only Codex Pac-Man, migrate it, then re-enable it:
 
 ```sh
 codex-pacman install --update
@@ -100,6 +100,10 @@ SwiftBar stores its native values beside the launcher in `codex-pacman.vars.json
 - Below **10%**: a compact `!` plus the percentage in red. The textual warning remains visible regardless of color/appearance.
 - Exhausted: `! 0%`.
 - Error or stale data: compact `!`, with details in the dropdown. Cached values are explicitly marked stale.
+
+The dropdown uses explicit light/dark colors so information remains readable instead of appearing disabled. Remaining percentages are prominent; bars are green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%. Stale data uses secondary text instead of fresh quota colors. Reset times and diagnostics use quieter, readable colors.
+
+Standard SwiftBar, Run in Terminal, Disable Plugin, About, and duplicate update-time items are hidden from the normal dropdown. **Option-click the Pac-Man icon** to reveal SwiftBar controls, including settings, refresh, and disabling this plugin. The plugin’s own Refresh now action remains visible.
 
 The dropdown shows both windows when available, actual durations from the server (commonly 5 hours and one week), remaining percentages, ten-cell bars, relative reset times, absolute times in the local timezone, and the last successful update. A missing window, duration, or reset timestamp is identified without assuming a 5-hour/weekly mapping.
 
@@ -162,7 +166,7 @@ brew upgrade forkunsafe/tap/codex-pacman
 
 Then refresh **only Codex Pac-Man** in SwiftBar so its streaming process loads the new code. The links follow the active Homebrew version without recopying files. Native settings and state remain in place. If a major update requires reconnecting the links, disable only this plugin and use `codex-pacman install --update` before re-enabling it.
 
-To uninstall, disable **only Codex Pac-Man**, then remove its user-level connection before removing the Homebrew program:
+To uninstall, Option-click the icon and disable **only Codex Pac-Man**, then remove its user-level connection before removing the Homebrew program:
 
 ```sh
 codex-pacman uninstall

@@ -146,6 +146,25 @@ class UI(unittest.TestCase):
         self.assertIn('unavailable', ui.relative(None, 1000))
         self.assertEqual(ui.relative(1000+1440*60+7*3600, 1000), 'Resets in 1d 7h')
 
+    def test_readable_rows_and_quota_bar_colors(self):
+        for used, color in [(29, ui.HEALTHY), (64, ui.MODERATE), (80, ui.WARNING), (95, ui.CRITICAL), (100, ui.CRITICAL)]:
+            output = ui.render(core.parse_limits(fixture(used, used)), 1000, 1010)
+            for line in output.splitlines()[2:]:
+                if line != '---' and not line.startswith('Refresh now'):
+                    self.assertRegex(line, r'color=#[0-9A-F]{6},#[0-9A-F]{6}')
+            bars = [line for line in output.splitlines() if 'font=Menlo size=11' in line]
+            self.assertEqual(len(bars), 2)
+            self.assertTrue(all('color=' + color in line for line in bars))
+            self.assertIn('Refresh now | stdin=refresh', output)
+        stale = ui.render(core.parse_limits(fixture()), 1000, 1200)
+        self.assertNotIn(ui.HEALTHY, stale)
+        self.assertNotIn(ui.MODERATE, stale)
+
+    def test_standard_controls_are_option_click_only(self):
+        metadata = (MODULES.parent/'codex-pacman.sh').read_text()
+        for field in ('hideAbout', 'hideRunInTerminal', 'hideLastUpdated', 'hideDisablePlugin', 'hideSwiftBar'):
+            self.assertIn('<swiftbar.%s>true</swiftbar.%s>' % (field, field), metadata)
+
     def test_png(self):
         import base64
         import struct

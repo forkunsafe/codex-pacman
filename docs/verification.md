@@ -35,6 +35,10 @@ Version 1.0.1 adds the `codex-pacman` command and link-based installation for Ho
 
 Intel Homebrew installation and a real future-version `brew upgrade` have not been exercised. Upgrade-link behavior is covered by the opt-switch subprocess test.
 
+## Readable dropdown (1.0.2)
+
+The 31-test suite checks explicit light/dark color pairs on informational rows, quota-dependent bar colors, muted stale data, an unchanged active refresh action, and metadata hiding standard controls. SwiftBar 2.1.1 source confirms that supplying a color also enables informational menu items, preventing disabled grey rendering, and that Option-click reveals hidden standard items. The palette's minimum calculated contrast against representative solid backgrounds (`#F5F5F5` and `#252525`) is 5.22:1; this is not a measurement of translucent macOS menu backgrounds or a claim of visual testing in both themes.
+
 ## Limits of verification
 
 No real quota was intentionally exhausted or reset. Warning/exhausted rendering, uncertain recovery, first-start/restart suppression, malformed state, and RPC errors are covered by automated tests. Physical sleep/wake, Intel hardware, older Python versions, older Codex versions, missing-Python UI, long-duration use, and both macOS appearances have not been exercised end to end. Color readability is reinforced by a textual warning and native template imagery, but appearance-specific visual verification remains outstanding.
