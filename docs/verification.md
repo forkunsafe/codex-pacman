@@ -25,7 +25,15 @@ Run `python3 -B -m unittest discover -s tests -v`. Fixtures are synthetic; RPC t
 
 ## Homebrew packaging
 
-Version 1.0.1 adds the `codex-pacman` command and link-based installation for Homebrew. The automated suite contains 29 tests, including migration from a copied installation while retaining settings, stable links following a simulated Homebrew opt switch, and rollback after a failed module swap. These simulations are separate from real `brew install` and `brew test` checks.
+Version 1.0.1 adds the `codex-pacman` command and link-based installation for Homebrew. The automated suite contains 29 tests, including migration from a copied installation while retaining settings, stable links following a simulated Homebrew opt switch, and rollback after a failed module swap. These simulations are separate from the following real Homebrew checks, which also passed locally:
+
+- `brew install forkunsafe/tap/codex-pacman` fetched the public tap and installed the public 1.0.1 release with checksum verification.
+- `brew test forkunsafe/tap/codex-pacman` exercised the installed command, linked installation into a temporary SwiftBar folder, and uninstalled those links while preserving another fixture plugin and the packaged source.
+- `brew audit --strict forkunsafe/tap/codex-pacman` completed successfully for the final formula.
+- The existing live SwiftBar installation was migrated with `codex-pacman install --update`. Both code entries pointed to the stable Homebrew opt path, native settings were byte-for-byte unchanged, neighboring plugin files retained their checksums, and the restarted stream produced fresh quota state for both windows.
+- The Homebrew formula inventory added only `codex-pacman 1.0.1`; existing formula versions were unchanged. Homebrew's standard test/audit tooling populated its own Ruby vendor cache. No runtime Python packages or background services were added by the project.
+
+Intel Homebrew installation and a real future-version `brew upgrade` have not been exercised. Upgrade-link behavior is covered by the opt-switch subprocess test.
 
 ## Limits of verification
 
