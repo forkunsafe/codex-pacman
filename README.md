@@ -82,13 +82,13 @@ SwiftBar stores its native values beside the launcher in `codex-pacman.vars.json
 
 The dropdown shows both windows when available, actual durations from the server (commonly 5 hours and one week), remaining percentages, ten-cell bars, relative reset times, absolute times in the local timezone, and the last successful update. A missing window, duration, or reset timestamp is identified without assuming a 5-hour/weekly mapping.
 
-Consumption in either window can trigger one **1.6-second animation** (eight 200 ms frames), even if several percent were consumed between polls. Pac-Man opens/closes its mouth, dots disappear, and `om nom nom` briefly appears. It then returns to the normal or warning display. There is no sound or notification.
+Consumption in either window can trigger one **1.9-second animation** (six 150 ms eating frames, then two 500 ms mouth frames keeping the final message visible for one second), even if several percent were consumed between polls. Pac-Man opens/closes its mouth, dots disappear, and `om nom nom` stays visible for one second. It then returns to the normal or warning display. There is no sound or notification.
 
 Only consecutive, trustworthy observations of the same window duration and reset timestamp are compared. First startup, process restart, errors, backwards clocks, gaps over 90 seconds, missing reset metadata, usage decreases, and quota resets establish a baseline without animating the affected change. Each window is tracked independently. State is committed before animation, so an interrupted animation is never replayed. This deliberately favors missing an animation over showing a misleading one.
 
 ## Refresh and errors
 
-Quota is polled roughly every **60 seconds after the previous request finishes**. Use **Refresh now** for an immediate serialized request via SwiftBar's native `stdin` action. Rapid clicks are coalesced with a two-second minimum request spacing. No overlapping RPC calls are made.
+Quota is polled roughly every **60 seconds after the previous request finishes**. SwiftBar’s Schedule field is intentionally empty: this is a continuously running streamable plugin, so its internal event loop controls polling rather than a SwiftBar restart schedule. Use **Refresh now** for an immediate serialized request via SwiftBar's native `stdin` action. Rapid clicks are coalesced with a two-second minimum request spacing. No overlapping RPC calls are made.
 
 There is no filesystem scan, session-log parsing, thread creation, model request, or manual credential extraction. The plugin does not initiate login or call authentication-changing RPCs. Codex itself consumes its selected environment's normal authentication; the plugin never opens credential files or copies tokens. Server error messages and stderr are not displayed or logged because they may contain sensitive information. No data is sent to third-party services. Codex analytics and telemetry export are disabled for the child process.
 

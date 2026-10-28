@@ -100,6 +100,9 @@ class Animation(unittest.TestCase):
         windows = core.parse_limits(fixture())
         frames = [ui.render(windows, 1000, 1010, frame=f) for f in ui.animation_frames()]
         self.assertEqual(len(frames), 8)
+        timing = ui.animation_frames()
+        self.assertAlmostEqual(sum(f[2] for f in timing if f[1] == 'om nom nom'), 1.0)
+        self.assertAlmostEqual(sum(f[2] for f in timing), 1.9)
         self.assertIn('om nom nom', frames[-1])
         normal = ui.render(windows, 1000, 1010)
         self.assertNotIn('om nom nom', normal)

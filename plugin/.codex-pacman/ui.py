@@ -98,5 +98,8 @@ def render(windows, updated, now, name='Codex', error=None, frame=None):
 
 
 def animation_frames():
-    return [(True, '· · ·'), (False, '· · ·'), (True, '· ·'), (False, '· ·'),
-            (True, '·'), (False, '·'), (True, 'om nom nom'), (False, 'om nom nom')]
+    """Eat dots at 150 ms per frame; keep the final message visible for one second."""
+    return [(True, '· · ·', .15), (False, '· · ·', .15),
+            (True, '· ·', .15), (False, '· ·', .15),
+            (True, '·', .15), (False, '·', .15),
+            (True, 'om nom nom', .5), (False, 'om nom nom', .5)]

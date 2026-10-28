@@ -64,7 +64,7 @@ def run(once=False):
                         try:
                             for frame in animation_frames():
                                 emit(render(windows, updated, time.time(), name, frame=frame))
-                                time.sleep(.2)
+                                time.sleep(frame[2])
                         finally:
                             emit(render(windows, updated, time.time(), name))
                     else:
