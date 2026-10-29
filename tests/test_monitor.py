@@ -151,7 +151,9 @@ class UI(unittest.TestCase):
             output = ui.render(core.parse_limits(fixture(used, used)), 1000, 1010)
             for line in output.splitlines()[2:]:
                 if line != '---' and not line.startswith('Refresh now'):
-                    self.assertRegex(line, r'color=#[0-9A-F]{6},#[0-9A-F]{6}')
+                    self.assertIn('stdin=noop', line)
+                    if 'font=Menlo size=11' not in line:
+                        self.assertNotIn('color=', line)
             bars = [line for line in output.splitlines() if 'font=Menlo size=11' in line]
             self.assertEqual(len(bars), 2)
             self.assertTrue(all('color=' + color in line for line in bars))
@@ -159,6 +161,17 @@ class UI(unittest.TestCase):
         stale = ui.render(core.parse_limits(fixture()), 1000, 1200)
         self.assertNotIn(ui.HEALTHY, stale)
         self.assertNotIn(ui.MODERATE, stale)
+
+    def test_bar_palette_contrast_on_both_backgrounds(self):
+        def luminance(color):
+            channels = [int(color[i:i+2], 16)/255 for i in (1, 3, 5)]
+            linear = [v/12.92 if v <= .04045 else ((v+.055)/1.055)**2.4 for v in channels]
+            return sum(v*w for v, w in zip(linear, (.2126, .7152, .0722)))
+        for foreground in (ui.HEALTHY, ui.MODERATE, ui.WARNING, ui.CRITICAL):
+            self.assertNotIn(',', foreground)
+            for background in ('#F5F5F5', '#252525'):
+                dark, light = sorted((luminance(foreground), luminance(background)))
+                self.assertGreaterEqual((light+.05)/(dark+.05), 3.0)
 
     def test_standard_controls_are_option_click_only(self):
         metadata = (MODULES.parent/'codex-pacman.sh').read_text()
@@ -228,6 +241,22 @@ class RPC(unittest.TestCase):
                     client.request('account/rateLimits/read')
             self.assertNotIn('SECRET', str(caught.exception))
             self.assertIsNotNone(client.process.poll())
+
+    def test_information_click_does_not_trigger_an_rpc(self):
+        class Selector:
+            count = 0
+            def __enter__(self): return self
+            def __exit__(self, *_): pass
+            def register(self, *_): pass
+            def select(self, *_):
+                self.count += 1
+                if self.count == 1: return [object()]
+                raise SystemExit()
+        with tempfile.TemporaryDirectory() as temporary:
+            output = io.StringIO()
+            with patch.object(main, 'codex_home', return_value=Path(temporary)), patch.object(main, 'state_directory', return_value=Path(temporary)), patch.object(main, 'poll', return_value=core.parse_limits(fixture())) as poll, patch.object(main.selectors, 'DefaultSelector', Selector), patch.object(main.os, 'read', return_value=b'noop\n'), contextlib.redirect_stdout(output):
+                with self.assertRaises(SystemExit): main.run()
+            self.assertEqual(poll.call_count, 1)
 
     def test_stream_loop_baseline_failure_recovery_and_single_event(self):
         with tempfile.TemporaryDirectory() as temporary:

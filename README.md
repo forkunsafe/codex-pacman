@@ -101,7 +101,9 @@ SwiftBar stores its native values beside the launcher in `codex-pacman.vars.json
 - Exhausted: `! 0%`.
 - Error or stale data: compact `!`, with details in the dropdown. Cached values are explicitly marked stale.
 
-The dropdown uses explicit light/dark colors so information remains readable instead of appearing disabled. Remaining percentages are prominent; bars are green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%. Stale data uses secondary text instead of fresh quota colors. Reset times and diagnostics use quieter, readable colors.
+Dropdown text uses macOS's adaptive system text color, including bold remaining percentages. Dates, diagnostics, and hints use smaller type instead of hardcoded grey. This avoids stale light/dark text colors when the system appearance changes. Bars remain green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%; each accent is the same color in both themes and was chosen for graphical contrast against representative light and dark backgrounds. Stale bars use native text color rather than fresh quota colors. Critical menu bar warnings retain the compact red `!` indicator.
+
+Informational rows use a harmless native stdin action to remain enabled with the system text color. Clicking them does not refresh quota, start a process, or change settings. Only Refresh now triggers a manual request.
 
 Standard SwiftBar, Run in Terminal, Disable Plugin, About, and duplicate update-time items are hidden from the normal dropdown. **Option-click the Pac-Man icon** to reveal SwiftBar controls, including settings, refresh, and disabling this plugin. The plugin’s own Refresh now action remains visible.
 
@@ -201,6 +203,12 @@ Manual uninstall: disable this plugin, delete those three entries from your Plug
 
 ```sh
 python3 -B -m unittest discover -s tests -v
+```
+
+On macOS with the Swift command-line tools, an optional AppKit check verifies that the same cached native text color adapts Aqua → Dark Aqua → Aqua without changing system settings:
+
+```sh
+swift tools/check-native-colors.swift
 ```
 
 Tests use synthetic fixtures and a real mocked subprocess, without contacting Codex or reading account data. Coverage includes initialization and notification handling, both quota windows and optional metadata, bucket isolation, malformed/unsupported/oversized RPC, timeout/EOF cleanup, percentage boundaries, independent windows, resets, baseline/restart/recovery suppression, one animation per event, return to normal, stale/error output, template PNG shape, markup sanitation, configuration precedence, spaces, no account fallback, atomic/corrupt state, and installation/update/uninstallation preserving other plugins. Homebrew integration tests cover the command entry point, migration from copied files while retaining settings, symlinks following an `opt` upgrade, and rollback if the module-link swap fails.

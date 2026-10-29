@@ -28,7 +28,7 @@ class RPC:
             self.process = subprocess.Popen(self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                             stderr=subprocess.DEVNULL, env=self.env, bufsize=0)
             self.selector.register(self.process.stdout, selectors.EVENT_READ)
-            self.request('initialize', {'clientInfo': {'name': 'codex_pacman', 'title': 'Codex Pac-Man', 'version': '1.0.2'}})
+            self.request('initialize', {'clientInfo': {'name': 'codex_pacman', 'title': 'Codex Pac-Man', 'version': '1.0.3'}})
             self.send({'method': 'initialized'})
             return self
         except BaseException:

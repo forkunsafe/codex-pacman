@@ -15,14 +15,14 @@
  <path d="M44 170H332" stroke="#e3e5e9"/>
  <text x="44" y="194" font-weight="bold">5-hour limit</text>
  <text x="53" y="216" font-weight="bold">73% remaining</text>
- <text x="53" y="235" font-family="Menlo,monospace" fill="#18763A">███████░░░</text>
- <text x="53" y="256" fill="#616875">Resets in 2h 14m</text>
+ <text x="53" y="235" font-family="Menlo,monospace" fill="#338A52">███████░░░</text>
+ <text x="53" y="256" fill="#20232a" font-size="12">Resets in 2h 14m</text>
  <text x="44" y="286" font-weight="bold">Weekly limit</text>
  <text x="53" y="308" font-weight="bold">42% remaining</text>
- <text x="53" y="327" font-family="Menlo,monospace" fill="#0067B1">████░░░░░░</text>
- <text x="53" y="348" fill="#616875">Resets in 3d 7h</text>
+ <text x="53" y="327" font-family="Menlo,monospace" fill="#337FB8">████░░░░░░</text>
+ <text x="53" y="348" fill="#20232a" font-size="12">Resets in 3d 7h</text>
  <path d="M44 361H332" stroke="#e3e5e9"/>
- <text x="44" y="382" fill="#616875">Last successful update: 21:32</text>
+ <text x="44" y="382" fill="#20232a" font-size="12">Last successful update: 21:32</text>
  <text x="44" y="407">Refresh now</text>
  <text x="378" y="170" font-size="15" font-weight="bold">Small footprint. Real limits.</text>
  <text x="378" y="200">One selected Codex environment</text>

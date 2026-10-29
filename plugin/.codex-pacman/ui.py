@@ -6,14 +6,18 @@ import math
 import struct
 import zlib
 
-# Explicit light/dark colors keep informational menu rows enabled and readable.
-PRIMARY = '#1D1D1F,#F5F5F7'
-SECONDARY = '#52525B,#C6C6CE'
-MUTED = '#62626B,#B0B0BA'
-HEALTHY = '#18763A,#5DDC83'
-MODERATE = '#0067B1,#7CC4FF'
-WARNING = '#8A5700,#FFD36A'
-CRITICAL = '#BC2026,#FF7B81'
+# Accents are graphics, not body text: each remains distinguishable on both
+# light and dark menu backgrounds, so no theme detection or recoloring is needed.
+HEALTHY = '#338A52'
+MODERATE = '#337FB8'
+WARNING = '#A47620'
+CRITICAL = '#C45A58'
+
+
+def info(text, attributes=''):
+    # A harmless stdin action keeps AppKit's adaptive controlTextColor enabled.
+    # The stream ignores noop; reading/clicking information never polls Codex.
+    return (str(text) + ' | stdin=noop ' + attributes).rstrip()
 
 
 def quota_color(remaining):
@@ -93,29 +97,30 @@ def render(windows, updated, now, name='Codex', error=None, frame=None):
         label = frame[1]
     image = icon(frame[0] if frame else True)
     header = '%s | templateImage=%s width=16 height=16 %s' % (label, image, attrs)
-    lines = [header, '---', clean(name) + ' | color=' + PRIMARY + ' size=13', '---']
+    lines = [header, '---', info(clean(name), 'size=13'), '---']
     if stale:
-        lines.append(('Stale data — last successful values' if windows else 'Usage unavailable') + ' | color=' + WARNING)
+        lines.append(info('Stale data — last successful values' if windows else 'Usage unavailable', 'size=12'))
     if error:
-        lines.append(clean(error) + ' | length=110 color=' + SECONDARY)
+        lines.append(info(clean(error), 'length=110 size=12'))
     for slot, window in windows.items():
         pct = 100 - window['used']
         bars = max(0, min(10, int(pct / 10 + .5)))
-        bar_color = SECONDARY if stale else quota_color(pct)
-        percent_color = SECONDARY if stale else (quota_color(pct) if pct < 25 else PRIMARY)
-        lines += [title(slot, window['duration']) + ' | color=' + SECONDARY,
-                  '  %g%% remaining%s | color=%s font=Menlo-Bold size=13' % (pct, ' (stale)' if stale else '', percent_color),
-                  '  ' + '█' * bars + '░' * (10 - bars) + ' | font=Menlo size=11 color=' + bar_color,
-                  '  ' + relative(window['reset'], now) + ' | color=' + SECONDARY + ' size=12']
+        bar_attributes = 'font=Menlo size=11'
+        if not stale:
+            bar_attributes += ' color=' + quota_color(pct)
+        lines += [info(title(slot, window['duration']), 'size=12'),
+                  info('  %g%% remaining%s' % (pct, ' (stale)' if stale else ''), 'font=Menlo-Bold size=13'),
+                  info('  ' + '█' * bars + '░' * (10 - bars), bar_attributes),
+                  info('  ' + relative(window['reset'], now), 'size=12')]
         if window['reset'] is not None:
             try:
-                lines.append('  ' + datetime.fromtimestamp(window['reset']).astimezone().strftime('%a %d %b %H:%M %Z') + ' | color=' + MUTED + ' size=11')
+                lines.append(info('  ' + datetime.fromtimestamp(window['reset']).astimezone().strftime('%a %d %b %H:%M %Z'), 'size=11'))
             except (ValueError, OSError, OverflowError):
                 pass
     if len(windows) == 1:
-        lines.append('Only one quota window is available. | color=' + SECONDARY)
-    lines += ['---', 'Last successful update: ' + (datetime.fromtimestamp(updated).astimezone().strftime('%Y-%m-%d %H:%M:%S %Z') if updated else 'never') + ' | color=' + MUTED + ' size=11',
-              'Refresh now | stdin=refresh', 'Option-click for SwiftBar controls | color=' + MUTED + ' size=11']
+        lines.append(info('Only one quota window is available.', 'size=11'))
+    lines += ['---', info('Last successful update: ' + (datetime.fromtimestamp(updated).astimezone().strftime('%Y-%m-%d %H:%M:%S %Z') if updated else 'never'), 'size=11'),
+              'Refresh now | stdin=refresh', info('Option-click for SwiftBar controls', 'size=11')]
     return '\n'.join(lines) + '\n'
 
 

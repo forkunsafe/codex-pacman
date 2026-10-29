@@ -92,6 +92,8 @@ def run(once=False):
                     if b'\n' in pending:
                         commands = pending.split(b'\n')
                         pending = commands.pop()
+                        # Informational rows use stdin=noop for native enabled text.
+                        # Ignore it without changing the polling deadline.
                         if b'refresh' in commands:
                             time.sleep(max(0, 2 - (time.monotonic() - request_started)))
                             break
