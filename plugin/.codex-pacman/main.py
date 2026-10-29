@@ -29,6 +29,28 @@ def poll(home):
         return parse_limits(rpc.request('account/rateLimits/read'))
 
 
+def wait_for_refresh(selector, request_started=None):
+    """Wait for the poll deadline or explicit refresh; noop never retries RPC."""
+    deadline = time.monotonic() + POLL_SECONDS
+    pending = b''
+    while True:
+        events = selector.select(max(0, deadline - time.monotonic()))
+        if not events:
+            return
+        data = os.read(sys.stdin.fileno(), 4096)
+        if not data:
+            selector.unregister(sys.stdin)
+            continue
+        pending = (pending + data)[-4096:]
+        if b'\n' in pending:
+            commands = pending.split(b'\n')
+            pending = commands.pop()
+            if b'refresh' in commands:
+                if request_started is not None:
+                    time.sleep(max(0, 2 - (time.monotonic() - request_started)))
+                return
+
+
 def run(once=False):
     env = os.environ
     name = env.get('VAR_DISPLAY_NAME', '').strip() or 'Codex'
@@ -76,27 +98,7 @@ def run(once=False):
                     emit(render(windows, updated, time.time(), name, message))
                 if once:
                     return
-                # Read bounded commands, no threads, no busy loops, no queued RPC.
-                deadline = time.monotonic() + POLL_SECONDS
-                pending = b''
-                while True:
-                    delay = max(0, deadline - time.monotonic())
-                    events = selector.select(delay)
-                    if not events:
-                        break
-                    data = os.read(sys.stdin.fileno(), 4096)
-                    if not data:
-                        selector.unregister(sys.stdin)
-                        continue
-                    pending = (pending + data)[-4096:]
-                    if b'\n' in pending:
-                        commands = pending.split(b'\n')
-                        pending = commands.pop()
-                        # Informational rows use stdin=noop for native enabled text.
-                        # Ignore it without changing the polling deadline.
-                        if b'refresh' in commands:
-                            time.sleep(max(0, 2 - (time.monotonic() - request_started)))
-                            break
+                wait_for_refresh(selector, request_started)
 
 
 def main():
@@ -122,9 +124,8 @@ def main():
                     selector.register(sys.stdin, selectors.EVENT_READ)
                 except (OSError, ValueError):
                     pass
-                if selector.select(POLL_SECONDS):
-                    if not os.read(sys.stdin.fileno(), 4096):
-                        time.sleep(POLL_SECONDS)
+                wait_for_refresh(selector)
+
 
 
 if __name__ == '__main__':

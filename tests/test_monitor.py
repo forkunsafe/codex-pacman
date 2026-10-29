@@ -258,6 +258,21 @@ class RPC(unittest.TestCase):
                 with self.assertRaises(SystemExit): main.run()
             self.assertEqual(poll.call_count, 1)
 
+    def test_information_click_does_not_retry_a_setup_error(self):
+        class Selector:
+            count = 0
+            def __enter__(self): return self
+            def __exit__(self, *_): pass
+            def register(self, *_): pass
+            def select(self, *_):
+                self.count += 1
+                if self.count == 1: return [object()]
+                raise SystemExit()
+        output = io.StringIO()
+        with patch.object(main, 'run', side_effect=[core.MonitorError('Setup unavailable'), SystemExit()]) as run, patch.object(main.selectors, 'DefaultSelector', Selector), patch.object(main.os, 'read', return_value=b'noop\n'), patch.object(main.signal, 'signal'), patch.object(main.sys, 'argv', ['main.py']), contextlib.redirect_stdout(output):
+            with self.assertRaises(SystemExit): main.main()
+        self.assertEqual(run.call_count, 1)
+
     def test_stream_loop_baseline_failure_recovery_and_single_event(self):
         with tempfile.TemporaryDirectory() as temporary:
             windows = [core.parse_limits(fixture(v)) for v in (10, 11, 11, 13, 14)]
