@@ -49,6 +49,10 @@ All 34 Python tests passed, including native-text markup, bar-color boundaries, 
 
 The old text-and-dots animation is replaced with a fixed-width 16-point gold icon: two pulses over 1.2 seconds, followed by a 12-second idle afterglow. The SwiftBar submenu is visible normally, replacing the misleading no-op Option-click hint. Preview animation uses the existing stream, without an RPC, state write, or quota-baseline change. The 39-test suite covers afterglow expiry without moving the polling deadline, preview isolation, warning preservation, interrupt recovery, and fixed image dimensions. Live Accessibility checks confirmed that Preview animation is actionable and the status-item size is identical before, during, and after the effect. A normal click opened the native SwiftBar submenu and exposed Preferences without Option. Native settings and neighboring plugins retained their byte-for-byte contents. These checks were completed on the local trial before publication.
 
+## High-contrast critical indicator (1.0.5)
+
+The critical menu bar percentage now uses bold native system text instead of fixed red, which was hard to distinguish against tinted menu bar backgrounds. The `!` and exhausted `0%` labels remain explicit, including during gold animation. Existing boundary and preview tests check the native-color header and bold critical style. Dropdown quota graphics keep their semantic colors.
+
 ## Limits of verification
 
 No real quota was intentionally exhausted or reset. Warning/exhausted rendering, uncertain recovery, first-start/restart suppression, malformed state, and RPC errors are covered by automated tests. Physical sleep/wake, Intel hardware, older Python versions, older Codex versions, missing-Python UI, long-duration use, and both macOS appearances have not been exercised end to end. Color readability is reinforced by a textual warning and native template imagery, but appearance-specific visual verification remains outstanding.

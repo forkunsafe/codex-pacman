@@ -8,7 +8,7 @@
  <path d="M 286 90 A 10 10 0 1 0 286 108 L 277 99 Z" fill="#AE7300"/>
  <text x="297" y="104" font-family="Helvetica,sans-serif" font-size="12" fill="#252931">Two pulses · 12 s gold</text>
  <path d="M 542 90 A 10 10 0 1 0 542 108 L 533 99 Z" fill="#252931"/>
- <text x="552" y="104" font-family="Helvetica,sans-serif" font-size="13" fill="#ba2634">! 9%</text>
+ <text x="552" y="104" font-family="Helvetica,sans-serif" font-size="13" fill="#252931" font-weight="bold">! 9%</text>
  <rect x="28" y="132" width="320" height="306" rx="12" fill="#fff"/>
  <g font-family="-apple-system,Helvetica,sans-serif" fill="#20232a" font-size="13">
  <text x="44" y="158" font-weight="bold">Codex</text>

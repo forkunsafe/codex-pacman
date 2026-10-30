@@ -149,7 +149,8 @@ class Animation(unittest.TestCase):
     def test_preview_does_not_hide_critical_warning(self):
         header = ui.render(core.parse_limits(fixture(100, 95)), 1000, 1010, frame=ui.GOLD_FRAME).splitlines()[0]
         self.assertTrue(header.startswith('! 0% | image='))
-        self.assertIn('color=red', header)
+        self.assertIn('font=Menlo-Bold', header)
+        self.assertNotIn('color=', header)
 
     def test_pulse_interrupt_restores_monochrome(self):
         display = main.Display('Codex', core.parse_limits(fixture()), 1000)
@@ -164,7 +165,8 @@ class UI(unittest.TestCase):
         for remaining, label in [(100, ''), (25, ''), (24, '24%'), (10, '10%'), (9, '! 9%'), (0, '! 0%')]:
             output = ui.render(core.parse_limits(fixture(100-remaining, 0)), 1000, 1010)
             self.assertEqual(output.split(' |')[0], label)
-            self.assertEqual('color=red' in output.splitlines()[0], remaining < 10)
+            self.assertEqual('font=Menlo-Bold' in output.splitlines()[0], remaining < 10)
+            self.assertNotIn('color=', output.splitlines()[0])
             self.assertIn('%g%% remaining' % remaining, output)
 
     def test_secondary_lowest(self):

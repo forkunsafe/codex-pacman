@@ -97,11 +97,11 @@ SwiftBar stores its native values beside the launcher in `codex-pacman.vars.json
 
 - Normal: a 16-point monochrome template icon (a 32×32 retina raster), with no percentage or text label. macOS supplies native status-item padding and appearance adaptation.
 - Below **25%** remaining: the lowest remaining percentage across available windows.
-- Below **10%**: a compact `!` plus the percentage in red. The textual warning remains visible regardless of color/appearance.
+- Below **10%**: a bold compact `!` plus the percentage in the native menu bar text color. The textual warning remains visible regardless of color/appearance.
 - Exhausted: `! 0%`.
 - Error or stale data: compact `!`, with details in the dropdown. Cached values are explicitly marked stale.
 
-Dropdown text uses macOS's adaptive system text color, including bold remaining percentages. Dates, diagnostics, and hints use smaller type instead of hardcoded grey. This avoids stale light/dark text colors when the system appearance changes. Bars remain green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%; each accent is the same color in both themes and was chosen for graphical contrast against representative light and dark backgrounds. Stale bars use native text color rather than fresh quota colors. Critical menu bar warnings retain the compact red `!` indicator.
+Dropdown text uses macOS's adaptive system text color, including bold remaining percentages. Dates, diagnostics, and hints use smaller type instead of hardcoded grey. This avoids stale light/dark text colors when the system appearance changes. Bars remain green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%; each accent is the same color in both themes and was chosen for graphical contrast against representative light and dark backgrounds. Stale bars use native text color rather than fresh quota colors. Critical menu bar warnings use a bold adaptive system-color `!` and percentage, remaining readable over tinted wallpapers.
 
 Informational rows use a harmless native stdin action to remain enabled with the system text color. Clicking them does not refresh quota, start a process, or change settings. Only Refresh now triggers a manual request.
 

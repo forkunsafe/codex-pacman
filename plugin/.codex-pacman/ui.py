@@ -88,7 +88,7 @@ def render(windows, updated, now, name='Codex', error=None, frame=None):
         label = '%d%%' % math.floor(remaining)
     if remaining < 10:
         label = '! ' + label
-        attrs += ' color=red'
+        attrs = 'size=13 font=Menlo-Bold'
     if stale:
         label = '!'
         attrs = 'size=12'
