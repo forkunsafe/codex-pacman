@@ -36,24 +36,88 @@ def clean(text):
     return value.strip().lstrip('-')[:180] or 'Codex'
 
 
-@functools.lru_cache(maxsize=6)
-def icon(open_mouth=True, gold=False, dark=False):
-    width, height, scale = 16, 16, 2
-    rgb = ((255, 211, 58) if dark else (174, 115, 0)) if gold else (0, 0, 0)
-    w, h = width * scale, height * scale
+ICON_POINTS = 16
+ICON_SCALE = 2
+ICON_PIXELS = ICON_POINTS * ICON_SCALE
+CORAL = (255, 90, 101)
+WHITE = (255, 255, 255)
+
+
+def five_hour_remaining(windows):
+    """Select by actual duration, never by slot order or a different quota window."""
+    candidates = [100 - window['used'] for window in windows.values() if window['duration'] == 300]
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def fill_boundary(remaining):
+    """Return the horizontal cut in Retina pixels over the unchanged silhouette."""
+    if remaining is None:
+        return None
+    if isinstance(remaining, bool) or not isinstance(remaining, (int, float)) or not math.isfinite(remaining) or not 0 <= remaining <= 100:
+        raise ValueError('Remaining quota must be a finite percentage from 0 to 100.')
+    # The original 6.5-point radius spans pixels 3 through 29 on a 32px canvas.
+    return 3 + 26 * remaining / 100
+
+
+def rotation_components(rotation):
+    """Image coordinates point down, so positive angles rotate clockwise."""
+    angle = rotation % 360
+    quadrants = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
+    return quadrants.get(angle) or (math.cos(math.radians(angle)), math.sin(math.radians(angle)))
+
+
+@functools.lru_cache(maxsize=64)
+def silhouette(open_mouth=True, rotation=0):
+    """Return the original binary silhouette and its one-device-pixel inner stroke."""
+    cosine, sine = rotation_components(rotation)
+    mask = []
+    for y in range(ICON_PIXELS):
+        for x in range(ICON_PIXELS):
+            dx, dy = (x + .5) / ICON_SCALE - 8, (y + .5) / ICON_SCALE - 8
+            local_x, local_y = cosine*dx + sine*dy, -sine*dx + cosine*dy
+            mask.append(local_x * local_x + local_y * local_y <= 42.25 and abs(math.atan2(local_y, local_x)) >= (.62 if open_mouth else .12))
+    def inside(x, y):
+        return 0 <= x < ICON_PIXELS and 0 <= y < ICON_PIXELS and mask[y * ICON_PIXELS + x]
+    outline = tuple(mask[y * ICON_PIXELS + x] and any(not inside(x + dx, y + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+                    for y in range(ICON_PIXELS) for x in range(ICON_PIXELS))
+    return tuple(mask), outline
+
+
+def icon_pixels(remaining=None, open_mouth=True, rotation=0):
+    """Clip two solid colors to the mask; never blend across the horizontal cut."""
+    boundary = fill_boundary(remaining)
+    mask, outline = silhouette(open_mouth, rotation % 360)
+    cosine, sine = rotation_components(rotation)
     pixels = bytearray()
-    for y in range(h):
-        pixels.append(0)
-        for x in range(w):
-            dx, dy = (x + .5) / scale - 8, (y + .5) / scale - 8
-            inside = dx * dx + dy * dy <= 42.25
-            mouth = abs(math.atan2(dy, dx)) < (.62 if open_mouth else .12)
-            filled = inside and not mouth
-            pixels.extend((*rgb, 255 if filled else 0))
+    for y in range(ICON_PIXELS):
+        for x in range(ICON_PIXELS):
+            index = y * ICON_PIXELS + x
+            if not mask[index]:
+                pixels.extend((0, 0, 0, 0))
+            elif outline[index]:
+                pixels.extend((*WHITE, 255))
+            else:
+                dx, dy = (x+.5)/ICON_SCALE-8, (y+.5)/ICON_SCALE-8
+                local_y = (-sine*dx + cosine*dy)*ICON_SCALE + 16
+                consumed = boundary is not None and local_y >= boundary
+                pixels.extend((*(CORAL if consumed else WHITE), 255))
+    return bytes(pixels)
+
+
+def png_rgba(width, height, pixels):
+    """Encode unfiltered RGBA rows with the standard library only."""
     def chunk(name, data):
         return struct.pack('!I', len(data)) + name + data + struct.pack('!I', zlib.crc32(name + data))
-    png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('!2I5B', w, h, 8, 6, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(bytes(pixels))) + chunk(b'IEND', b'')
-    return base64.b64encode(png).decode()
+    stride = width * 4
+    scanlines = b''.join(b'\0' + pixels[y * stride:(y + 1) * stride] for y in range(height))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('!2I5B', width, height, 8, 6, 0, 0, 0))
+            + chunk(b'IDAT', zlib.compress(scanlines)) + chunk(b'IEND', b''))
+
+
+@functools.lru_cache(maxsize=64)
+def icon(remaining=None, open_mouth=True, rotation=0):
+    """Generate on demand with a bounded in-memory cache; no per-percent files."""
+    return base64.b64encode(png_rgba(ICON_PIXELS, ICON_PIXELS, icon_pixels(remaining, open_mouth, rotation))).decode()
 
 
 def relative(reset, now):
@@ -81,28 +145,19 @@ def title(slot, duration):
 def render(windows, updated, now, name='Codex', error=None, frame=None):
     stale = bool(error) or not updated or not 0 <= now - updated <= 90
     remaining = min((100 - w['used'] for w in windows.values()), default=100)
-    label = ''
-    attrs = 'size=12'
-    if remaining < 25:
-        # Round down so a partially exhausted percent never looks safer.
-        label = '%d%%' % math.floor(remaining)
-    if remaining < 10:
-        label = '! ' + label
-        attrs = 'size=13 font=Menlo-Bold'
-    if stale:
-        label = '!'
-        attrs = 'size=12'
-    mouth = frame[0] if frame else True
-    if frame is not None and frame[1]:
-        graphic = 'image=' + icon(mouth, gold=True) + ',' + icon(mouth, gold=True, dark=True)
-    else:
-        graphic = 'templateImage=' + icon(mouth)
+    icon_remaining = five_hour_remaining(windows)
+    label = '!' if stale or icon_remaining is None or remaining < 10 else ''
+    attrs = 'size=13 font=Menlo-Bold' if not stale and remaining < 10 else 'size=12'
+    rotation = frame[0] if frame is not None else 0
+    graphic = 'image=' + icon(icon_remaining, rotation=rotation)
     header = '%s | %s width=16 height=16 %s' % (label, graphic, attrs)
     lines = [header, '---', info(clean(name), 'size=13'), '---']
     if stale:
         lines.append(info('Stale data — last successful values' if windows else 'Usage unavailable', 'size=12'))
     if error:
         lines.append(info(clean(error), 'length=110 size=12'))
+    if icon_remaining is None and windows:
+        lines.append(info('5-hour icon quota unavailable.', 'size=11'))
     for slot, window in windows.items():
         pct = 100 - window['used']
         bars = max(0, min(10, int(pct / 10 + .5)))
@@ -125,11 +180,6 @@ def render(windows, updated, now, name='Codex', error=None, frame=None):
     return '\n'.join(lines) + '\n'
 
 
-GOLD_SECONDS = 12
-GOLD_FRAME = (True, True, 0)
-
-
 def animation_frames():
-    """Two compact gold pulses; the event loop manages the idle gold afterglow."""
-    return [(False, True, .2), (True, False, .15), (True, True, .25),
-            (False, True, .2), (True, False, .15), (True, True, .25)]
+    """One clockwise revolution in 16 fixed-size frames over two seconds."""
+    return [(step*22.5, .125) for step in range(1, 17)]

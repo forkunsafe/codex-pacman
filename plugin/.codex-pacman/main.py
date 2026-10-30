@@ -9,7 +9,7 @@ import sys
 import time
 from core import MonitorError, codex_home, consumed, executable, load_state, parse_limits, save_state, state_directory
 from rpc import RPC
-from ui import GOLD_FRAME, GOLD_SECONDS, animation_frames, render
+from ui import animation_frames, render
 
 POLL_SECONDS = 60
 
@@ -35,43 +35,30 @@ class Display:
         self.windows = windows or {}
         self.updated = updated
         self.error = error
-        self.gold_until = 0
 
     def show(self, frame=None):
-        if frame is None and time.monotonic() < self.gold_until:
-            frame = GOLD_FRAME
         emit(render(self.windows, self.updated, time.time(), self.name, self.error, frame))
 
-    def pulse(self):
+    def animate(self):
         # Explicit preview also works when automatic animation is disabled.
         try:
             for frame in animation_frames():
                 self.show(frame)
-                time.sleep(frame[2])
-        except BaseException:
-            self.gold_until = 0
+                time.sleep(frame[1])
+        finally:
             self.show()
-            raise
-        self.gold_until = time.monotonic() + GOLD_SECONDS
-        self.show()
 
 
 def wait_for_refresh(selector, request_started=None, display=None):
-    """Preview and afterglow do not fetch quota or postpone the polling deadline."""
+    """Preview does not fetch quota or postpone the polling deadline."""
     deadline = time.monotonic() + POLL_SECONDS
     pending = b''
     while True:
         now = time.monotonic()
         if now >= deadline:
             return
-        expires_first = display is not None and 0 < display.gold_until < deadline
-        timeout = max(0, display.gold_until - now) if expires_first else deadline - now
-        events = selector.select(timeout)
+        events = selector.select(deadline - now)
         if not events:
-            if expires_first:
-                display.gold_until = 0
-                display.show()
-                continue
             return
         data = os.read(sys.stdin.fileno(), 4096)
         if not data:
@@ -86,7 +73,7 @@ def wait_for_refresh(selector, request_started=None, display=None):
                     time.sleep(max(0, 2 - (time.monotonic() - request_started)))
                 return
             if b'preview' in commands and display is not None:
-                display.pulse()
+                display.animate()
 
 
 def run(once=False):
@@ -121,12 +108,11 @@ def run(once=False):
                     windows, updated, certain = current, now, True
                     display.windows, display.updated, display.error = windows, updated, None
                     if play and animate and not once:
-                        display.pulse()
+                        display.animate()
                     else:
                         display.show()
                 except (MonitorError, OSError) as exc:
                     display.error = str(exc) if isinstance(exc, MonitorError) else 'Local I/O failed. Check Codex installation and plugin state-directory permissions.'
-                    display.gold_until = 0
                     certain = False
                     display.show()
                 if once:

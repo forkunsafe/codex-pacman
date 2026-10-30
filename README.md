@@ -2,13 +2,13 @@
 
 **A tiny SwiftBar plugin that tracks your Codex limits — and eats them.**
 
-A monochrome Pac-Man stays quietly in your menu bar. Click it for your remaining Codex quota and reset times. When you consume another whole percentage point, Pac-Man gives two compact gold pulses, then stays gold for 12 seconds without expanding the menu bar item.
+A Pac-Man-shaped 5-hour quota meter stays quietly in your menu bar. Click it for your remaining Codex quota and reset times. When you consume another whole percentage point, Pac-Man makes one clockwise 360° turn over two seconds without expanding the menu bar item.
 
 Codex Pac-Man is an independent community project. It is not affiliated with, endorsed by, or sponsored by OpenAI. Codex and Pac-Man names belong to their respective owners. The small geometric icon is drawn by this project; no game artwork or sounds are included.
 
-![Illustrative interface with synthetic values](docs/preview.svg)
+![5-hour quota icons at native size and magnified, using synthetic values](docs/usage-icon-preview.png)
 
-*Illustration with synthetic values, not a screenshot.*
+*Programmatically rendered native-size icons and enlarged pixel detail; synthetic values, not an account screenshot.*
 
 ## Requirements
 
@@ -95,13 +95,23 @@ SwiftBar stores its native values beside the launcher in `codex-pacman.vars.json
 
 ## Display and animation
 
-- Normal: a 16-point monochrome template icon (a 32×32 retina raster), with no percentage or text label. macOS supplies native status-item padding and appearance adaptation.
-- Below **25%** remaining: the lowest remaining percentage across available windows.
-- Below **10%**: a bold compact `!` plus the percentage in the native menu bar text color. The textual warning remains visible regardless of color/appearance.
-- Exhausted: `! 0%`.
-- Error or stale data: compact `!`, with details in the dropdown. Cached values are explicitly marked stale.
+- A 16-point full-color PNG icon (32×32 Retina pixels), with the original Pac-Man silhouette and mouth. Numeric percentages appear only in the dropdown.
+- The actual 300-minute window drives the icon, regardless of whether it is primary or secondary. Weekly usage never contributes to its fill.
+- White at 100% remaining; coral-red `#FF5A65` rises from bottom to top as the 5-hour quota is consumed. At 0%, the interior is coral-red.
+- A continuous one-Retina-pixel white outline covers the complete silhouette, including both mouth edges, at every level. The fill boundary is sharp and uses only solid pixels.
+- A compact `!` marks a critical limit in either window, unavailable 5-hour metadata, or stale/error data. No numeric menu bar label is added. Valid cached fill is retained with the stale marker; missing quota renders a neutral white icon, never an exhausted red icon.
 
-Dropdown text uses macOS's adaptive system text color, including bold remaining percentages. Dates, diagnostics, and hints use smaller type instead of hardcoded grey. This avoids stale light/dark text colors when the system appearance changes. Bars remain green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%; each accent is the same color in both themes and was chosen for graphical contrast against representative light and dark backgrounds. Stale bars use native text color rather than fresh quota colors. Critical menu bar warnings use a bold adaptive system-color `!` and percentage, remaining readable over tinted wallpapers.
+All percentage values, including fractional values, map to the horizontal cut. The 16-point raster naturally quantizes that cut to device-pixel rows; very small differences near the endpoints can share the same bitmap, especially under the always-white outline. Images are generated on demand with a bounded in-memory cache, not stored as 101 files. Unchanged quota generates identical PNG bytes.
+
+Regenerate the standalone preview with the Python standard library:
+
+```sh
+python3 tools/preview-usage-icons.py
+```
+
+On macOS with Swift developer tools, `python3 tools/preview-usage-icons.py --png` also renders a 2× PNG through AppKit. The top row is actual 16-point size; the lower row shows the same pixels enlarged. These tools use only synthetic data and are not runtime dependencies.
+
+Dropdown text uses macOS's adaptive system text color, including bold remaining percentages. Dates, diagnostics, and hints use smaller type instead of hardcoded grey. This avoids stale light/dark text colors when the system appearance changes. Bars remain green at 50% or more, blue at 25–49%, amber at 10–24%, and red below 10%; each accent is the same color in both themes and was chosen for graphical contrast against representative light and dark backgrounds. Stale bars use native text color rather than fresh quota colors. Critical menu bar warnings retain a bold adaptive system-color `!`, remaining readable over tinted wallpapers.
 
 Informational rows use a harmless native stdin action to remain enabled with the system text color. Clicking them does not refresh quota, start a process, or change settings. Only Refresh now triggers a manual request.
 
@@ -109,9 +119,9 @@ The native **SwiftBar** submenu is always visible, providing a working path to S
 
 The dropdown shows both windows when available, actual durations from the server (commonly 5 hours and one week), remaining percentages, ten-cell bars, relative reset times, absolute times in the local timezone, and the last successful update. A missing window, duration, or reset timestamp is identified without assuming a 5-hour/weekly mapping.
 
-Consumption in either window triggers two gold pulses lasting **1.2 seconds** in total. The icon then remains gold for **12 seconds**, returning automatically to the normal monochrome icon. The canvas stays 16 points wide throughout: there are no dots, labels, or menu bar width changes. Existing warning percentages remain visible during the effect. Separate light/dark icon colors keep the gold visible in both appearances.
+Consumption in either window triggers one **clockwise 360° rotation over two seconds**, using 16 fixed-size frames. The complete current icon rotates, including the coral/white quota split and white outline. The contour is rasterized in each orientation so the mouth edges remain outlined; no blended fill pixels or clipping are introduced. The canvas stays 16 points wide throughout. The final frame is identical to the resting icon. There are no gold pulses or delayed afterglow.
 
-Use **Preview animation** to try the effect without fetching quota, saving state, or changing the consumption baseline. Explicit preview works even if automatic animation is disabled. The afterglow uses an idle selector timeout; it does not postpone polling, block manual refresh, or create a timer process. There is no sound or notification.
+Use **Preview animation** to try the rotation without fetching quota, saving state, or changing the consumption baseline. Explicit preview works even if automatic animation is disabled. Preview does not reset the polling deadline or create a timer process. There is no sound or notification.
 
 Only consecutive, trustworthy observations of the same window duration and reset timestamp are compared. First startup, process restart, errors, backwards clocks, gaps over 90 seconds, missing reset metadata, usage decreases, and quota resets establish a baseline without animating the affected change. Each window is tracked independently. State is committed before animation, so an interrupted animation is never replayed. This deliberately favors missing an animation over showing a misleading one.
 

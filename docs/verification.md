@@ -53,8 +53,20 @@ The old text-and-dots animation is replaced with a fixed-width 16-point gold ico
 
 The critical menu bar percentage now uses bold native system text instead of fixed red, which was hard to distinguish against tinted menu bar backgrounds. The `!` and exhausted `0%` labels remain explicit, including during gold animation. Existing boundary and preview tests check the native-color header and bold critical style. Dropdown quota graphics keep their semantic colors.
 
+## Usage fill icon (1.0.6)
+
+The icon-only implementation uses the existing 32×32 PNG encoder and 16-point layout with the original silhouette. A one-device-pixel inner white outline is applied after the horizontal color split; full-color `image=` output prevents template tinting from discarding coral. Only one uniquely identified 300-minute window is used. Account resolution, RPC, persistence, polling, and animation scheduling are unchanged.
+
+46 tests passed. Pixel tests checked every integer fill level from 0 to 100, fractional mapping, the explicit 0/1/25/50/75/99/100 boundaries, unchanged masks, exact white/coral/transparent colors, no intermediate alpha, a connected white outline around the circle and mouth edges, weekly bucket isolation, missing/ambiguous metadata, reset updates, and preservation of coral and outline during gold frames. The standalone preview was rendered through AppKit at actual 16-point Retina size and with 5× pixel detail on a synthetic blue-gray background. The discrete raster can map nearby percentages to identical pixel rows; no subpixel fill blending is used. The local preview was connected to the existing SwiftBar installation with the same selected Codex home. Accessibility reported an empty menu bar title (no numeric quota label) and a 22-point status-item width including native padding. Native settings and neighboring plugin files were unchanged.
+
+## Clockwise rotation (1.0.6)
+
+The local usage-icon preview replaces gold feedback with one two-second clockwise revolution in 16 steps. The inverse image transform rotates both silhouette and the current fill boundary; a destination-space white outline preserves a continuous contour, including the mouth edges. The normal 0° icon is unchanged byte-for-byte at the five documented preview levels.
+
+47 tests passed, including exact clockwise pixel permutations at 90/180/270°, identical 0/360° output, attached coral/white fill and connected white outline at every animation angle, fixed dimensions, restoration on interruption, and preview isolation from RPC/state. Account selection, retrieval, and quota baselines are unchanged. The local preview was installed and its Preview animation action was invoked through Accessibility; status-item dimensions stayed fixed before, during, and after rotation. Native settings and neighboring plugins were preserved.
+
 ## Limits of verification
 
-No real quota was intentionally exhausted or reset. Warning/exhausted rendering, uncertain recovery, first-start/restart suppression, malformed state, and RPC errors are covered by automated tests. Physical sleep/wake, Intel hardware, older Python versions, older Codex versions, missing-Python UI, long-duration use, and both macOS appearances have not been exercised end to end. Color readability is reinforced by a textual warning and native template imagery, but appearance-specific visual verification remains outstanding.
+No real quota was intentionally exhausted or reset. Warning/exhausted rendering, uncertain recovery, first-start/restart suppression, malformed state, and RPC errors are covered by automated tests. Physical sleep/wake, Intel hardware, older Python versions, older Codex versions, missing-Python UI, long-duration use, and both macOS appearances have not been exercised end to end. Color readability is reinforced by a textual warning and a continuous white icon outline, but appearance-specific visual verification remains outstanding.
 
-The README image is a synthetic SVG illustration, not a captured screenshot. No private screen capture or account fixture is distributed.
+The README image is a synthetic PNG preview, not a captured screenshot. No private screen capture or account fixture is distributed.

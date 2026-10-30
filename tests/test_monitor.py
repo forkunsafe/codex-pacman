@@ -99,78 +99,64 @@ class Animation(unittest.TestCase):
     def test_animation_and_return(self):
         windows = core.parse_limits(fixture())
         timing = ui.animation_frames()
-        self.assertEqual(len(timing), 6)
-        self.assertAlmostEqual(sum(f[2] for f in timing), 1.2)
-        self.assertEqual(ui.GOLD_SECONDS, 12)
-        for frame in timing + [ui.GOLD_FRAME]:
-            header = ui.render(windows, 1000, 1010, frame=frame).splitlines()[0]
-            self.assertTrue(header.startswith(' | '))
-            self.assertIn(' width=16 height=16 ', header)
-            self.assertNotIn('om nom nom', header)
-        normal = ui.render(windows, 1000, 1010)
-        self.assertTrue(normal.startswith(' | templateImage='))
+        self.assertEqual(len(timing), 16)
+        self.assertEqual([frame[0] for frame in timing], [i*22.5 for i in range(1,17)])
+        self.assertAlmostEqual(sum(frame[1] for frame in timing), 2)
+        for frame in timing:
+            header = ui.render(windows,1000,1010,frame=frame).splitlines()[0]
+            self.assertTrue(header.startswith(' | image='))
+            self.assertIn(' width=16 height=16 ',header)
+            self.assertNotIn('%',header)
+        self.assertEqual(ui.render(windows,1000,1010,frame=timing[-1]),ui.render(windows,1000,1010))
 
-    def test_pulse_afterglow_and_return_do_not_poll_or_write_state(self):
+    def test_spin_does_not_poll_or_write_state(self):
         windows = core.parse_limits(fixture())
         display = main.Display('Codex', windows, 1000)
-        output = io.StringIO()
-        with patch.object(main.time, 'sleep'), patch.object(main.time, 'monotonic', return_value=100), patch.object(main, 'poll') as poll, patch.object(main, 'save_state') as save, contextlib.redirect_stdout(output):
-            display.pulse()
-        self.assertEqual(display.gold_until, 112)
-        self.assertEqual(display.windows, windows)
-        self.assertEqual(display.updated, 1000)
+        with patch.object(main.time, 'sleep'), patch.object(main, 'emit') as emit, patch.object(main, 'poll') as poll, patch.object(main, 'save_state') as save:
+            display.animate()
+        self.assertEqual(display.windows,windows)
+        self.assertEqual(display.updated,1000)
         poll.assert_not_called()
         save.assert_not_called()
-        with patch.object(main.time, 'monotonic', return_value=113), contextlib.redirect_stdout(output):
-            display.show()
-        self.assertIn(' | image=', output.getvalue())
-        self.assertIn(' | templateImage=', output.getvalue().split('~~~')[-2])
+        self.assertEqual(len(emit.call_args_list),17)
+        self.assertIn('image='+ui.icon(90),emit.call_args.args[0].splitlines()[0])
 
-    def test_afterglow_expiry_keeps_original_poll_deadline(self):
-        class Clock:
-            now = 100
-        clock = Clock()
-        class Selector:
-            delays = []
-            def select(self, delay):
-                self.delays.append(delay)
-                clock.now += delay
-                return []
-        selector = Selector()
-        display = main.Display('Codex', core.parse_limits(fixture()), 1000)
-        display.gold_until = 112
-        with patch.object(main.time, 'monotonic', side_effect=lambda: clock.now), patch.object(main, 'emit') as emit:
-            main.wait_for_refresh(selector, display=display)
-        self.assertEqual(selector.delays, [12, 48])
-        self.assertEqual(clock.now, 160)
-        self.assertEqual(display.gold_until, 0)
-        self.assertIn('templateImage=', emit.call_args.args[0].splitlines()[0])
+    def test_rotation_completion_adds_no_afterglow(self):
+        delays = []
+        display = main.Display('Codex',core.parse_limits(fixture()),1000)
+        with patch.object(main.time,'sleep',side_effect=lambda value: delays.append(value)), patch.object(main,'emit') as emit:
+            display.animate()
+        self.assertEqual(delays,[.125]*16)
+        self.assertAlmostEqual(sum(delays),2)
+        self.assertIn('image='+ui.icon(90),emit.call_args.args[0].splitlines()[0])
 
     def test_preview_does_not_hide_critical_warning(self):
-        header = ui.render(core.parse_limits(fixture(100, 95)), 1000, 1010, frame=ui.GOLD_FRAME).splitlines()[0]
-        self.assertTrue(header.startswith('! 0% | image='))
+        header = ui.render(core.parse_limits(fixture(100, 95)), 1000, 1010, frame=(90,.125)).splitlines()[0]
+        self.assertTrue(header.startswith('! | image='))
+        self.assertNotIn('%', header)
         self.assertIn('font=Menlo-Bold', header)
         self.assertNotIn('color=', header)
 
-    def test_pulse_interrupt_restores_monochrome(self):
+    def test_spin_interrupt_restores_usage_icon(self):
         display = main.Display('Codex', core.parse_limits(fixture()), 1000)
         with patch.object(main.time, 'sleep', side_effect=SystemExit()), patch.object(main, 'emit') as emit:
-            with self.assertRaises(SystemExit): display.pulse()
-        self.assertEqual(display.gold_until, 0)
-        self.assertIn('templateImage=', emit.call_args.args[0].splitlines()[0])
+            with self.assertRaises(SystemExit): display.animate()
+        self.assertIn('image=' + ui.icon(90), emit.call_args.args[0].splitlines()[0])
 
 
 class UI(unittest.TestCase):
     def test_boundaries(self):
-        for remaining, label in [(100, ''), (25, ''), (24, '24%'), (10, '10%'), (9, '! 9%'), (0, '! 0%')]:
+        for remaining, label in [(100, ''), (25, ''), (24, ''), (10, ''), (9, '!'), (0, '!')]:
             output = ui.render(core.parse_limits(fixture(100-remaining, 0)), 1000, 1010)
             self.assertEqual(output.split(' |')[0], label)
             self.assertEqual('font=Menlo-Bold' in output.splitlines()[0], remaining < 10)
             self.assertNotIn('color=', output.splitlines()[0])
+            self.assertNotIn('%', output.splitlines()[0])
+            self.assertNotIn('templateImage=', output.splitlines()[0])
             self.assertIn('%g%% remaining' % remaining, output)
 
     def test_secondary_lowest(self):
-        self.assertTrue(ui.render(core.parse_limits(fixture(5, 85)), 1000, 1010).startswith('15% |'))
+        self.assertTrue(ui.render(core.parse_limits(fixture(5, 85)), 1000, 1010).startswith(' | image='))
 
     def test_stale_and_error(self):
         windows = core.parse_limits(fixture())
@@ -329,7 +315,7 @@ class RPC(unittest.TestCase):
         poll.assert_not_called()
         save.assert_not_called()
         self.assertAlmostEqual(clock.now, 160)
-        self.assertIn('templateImage=', emit.call_args.args[0].splitlines()[0])
+        self.assertIn('image=' + ui.icon(90), emit.call_args.args[0].splitlines()[0])
 
     def test_information_click_does_not_retry_a_setup_error(self):
         class Selector:
@@ -363,12 +349,11 @@ class RPC(unittest.TestCase):
                 def __exit__(self, *_): pass
                 def register(self, *_): pass
                 def select(self, *_): return []
-            with patch.object(main, 'codex_home', return_value=Path(temporary)), patch.object(main, 'state_directory', return_value=Path(temporary)), patch.object(main, 'poll', side_effect=fake_poll), patch.object(main.selectors, 'DefaultSelector', Selector), patch.object(main.Display, 'pulse', autospec=True) as pulse, contextlib.redirect_stdout(output):
+            with patch.object(main, 'codex_home', return_value=Path(temporary)), patch.object(main, 'state_directory', return_value=Path(temporary)), patch.object(main, 'poll', side_effect=fake_poll), patch.object(main.selectors, 'DefaultSelector', Selector), patch.object(main.Display, 'animate', autospec=True) as animation, contextlib.redirect_stdout(output):
                 with self.assertRaises(SystemExit): main.run()
             # Events 10→11 and 13→14 only; recovery 11→13 is suppressed.
-            self.assertEqual(pulse.call_count, 2)
+            self.assertEqual(animation.call_count, 2)
             self.assertTrue(output.getvalue().endswith('~~~\n'))
-            self.assertNotIn(' | image=', output.getvalue().split('~~~')[-2])
             self.assertEqual(core.load_state(Path(temporary)/'state.json')['windows']['primary']['used'], 14)
 
 

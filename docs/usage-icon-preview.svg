@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="240" viewBox="0 0 600 240">
+<rect width="600" height="240" rx="12" fill="#5A718E"/>
+<g font-family="Helvetica,Arial,sans-serif" fill="white">
+<text x="24" y="26" font-size="14">5-hour remaining quota · native 16 pt / Retina</text>
+<text x="72" y="52" text-anchor="middle" font-size="12">100%</text>
+<image x="64" y="66" width="16" height="16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaElEQVR4nO3OgQnAMAzEwOy/dDtCsCXzGKIFdOe8tvVdio3HINWxCqFzhLDmLYQ9LyNi4/jcBJTH8bkFaM8pAI0pQJmvBmgIAlAgBmA/wgIgSBxhA1qQ6NxGtOYWAs0JRBtXIWPj11Q/xXLJi0psH1UAAAAASUVORK5CYII="/>
+<image x="32" y="112" width="80" height="80" style="image-rendering:pixelated" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaElEQVR4nO3OgQnAMAzEwOy/dDtCsCXzGKIFdOe8tvVdio3HINWxCqFzhLDmLYQ9LyNi4/jcBJTH8bkFaM8pAI0pQJmvBmgIAlAgBmA/wgIgSBxhA1qQ6NxGtOYWAs0JRBtXIWPj11Q/xXLJi0psH1UAAAAASUVORK5CYII="/>
+<text x="186" y="52" text-anchor="middle" font-size="12">75%</text>
+<image x="178" y="66" width="16" height="16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nO3SMQqAMBAF0ZzT3vsfQcHCRlF2Z5YlkA8pwzxIxlibbcfP2sJlkGhYhdA4QljxFMKOhxFt4fa4CQiH2+MWIB2nABSmACU+NUBDEIACMQDzIywAglw3t52fLOK+KSLCEA2Bn4IgSPyBiEDoJ0xDKsKfkJeVhdeqdgLlQmXb3xfy3AAAAABJRU5ErkJggg=="/>
+<image x="146" y="112" width="80" height="80" style="image-rendering:pixelated" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAf0lEQVR4nO3SMQqAMBAF0ZzT3vsfQcHCRlF2Z5YlkA8pwzxIxlibbcfP2sJlkGhYhdA4QljxFMKOhxFt4fa4CQiH2+MWIB2nABSmACU+NUBDEIACMQDzIywAglw3t52fLOK+KSLCEA2Bn4IgSPyBiEDoJ0xDKsKfkJeVhdeqdgLlQmXb3xfy3AAAAABJRU5ErkJggg=="/>
+<text x="300" y="52" text-anchor="middle" font-size="12">50%</text>
+<image x="292" y="66" width="16" height="16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiElEQVR4nO3UQQqAMAxE0Z7Tvfc/gt0VF8UymR9SoQG3/keCtnbmb/MspiycBlHDKMSNWwgqHkLQcRlRFi6PkwA5XB6nAOG4C7DCLgCJD8B1a88OAPYEKuCFsCHjLREEtQ0LQCDsLRAnsQHuNpAtuNvAEPYptvgqVAj1X5AhGeFPyGTSwmeypgNarwDsQl6NswAAAABJRU5ErkJggg=="/>
+<image x="260" y="112" width="80" height="80" style="image-rendering:pixelated" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAiElEQVR4nO3UQQqAMAxE0Z7Tvfc/gt0VF8UymR9SoQG3/keCtnbmb/MspiycBlHDKMSNWwgqHkLQcRlRFi6PkwA5XB6nAOG4C7DCLgCJD8B1a88OAPYEKuCFsCHjLREEtQ0LQCDsLRAnsQHuNpAtuNvAEPYptvgqVAj1X5AhGeFPyGTSwmeypgNarwDsQl6NswAAAABJRU5ErkJggg=="/>
+<text x="414" y="52" text-anchor="middle" font-size="12">25%</text>
+<image x="406" y="66" width="16" height="16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nO2UQQrAIAwEfWfv/f8TKvRcLHEmRMGF3gozWTWtneyW5ydl4DSRKFgVoXAkYcGnJGx4WOL9+7r5h6YXwGG4Mv0sWJmewNH0pHIsYICpgALfWqD2CPRLWPkMUQvqLqhcxUoLtA2lBdqGJoGPYolXERWx9kJYJAM8FPlIGvgkKx0lFIa/lEyXpQAAAABJRU5ErkJggg=="/>
+<image x="374" y="112" width="80" height="80" style="image-rendering:pixelated" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nO2UQQrAIAwEfWfv/f8TKvRcLHEmRMGF3gozWTWtneyW5ydl4DSRKFgVoXAkYcGnJGx4WOL9+7r5h6YXwGG4Mv0sWJmewNH0pHIsYICpgALfWqD2CPRLWPkMUQvqLqhcxUoLtA2lBdqGJoGPYolXERWx9kJYJAM8FPlIGvgkKx0lFIa/lEyXpQAAAABJRU5ErkJggg=="/>
+<text x="528" y="52" text-anchor="middle" font-size="12">0%</text>
+<image x="520" y="66" width="16" height="16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nO2UwRGAIAwEqdO//ZegDSAabi+RGW6G924SktZ2Vsv1khzwcfafQ+QT2CUSBj+I1MAVCQw+Ow4anl+98gkpeBiMVK+u3jQc3fvsqgkBBL60QO0I8E9YuYZSF9BbUHmKkS6o3UC6oHYDk5BH8YutiIpQdyEs4gAPRTqxgXdcuQGVhjg+gS+ObwAAAABJRU5ErkJggg=="/>
+<image x="488" y="112" width="80" height="80" style="image-rendering:pixelated" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhUlEQVR4nO2UwRGAIAwEqdO//ZegDSAabi+RGW6G924SktZ2Vsv1khzwcfafQ+QT2CUSBj+I1MAVCQw+Ow4anl+98gkpeBiMVK+u3jQc3fvsqgkBBL60QO0I8E9YuYZSF9BbUHmKkS6o3UC6oHYDk5BH8YutiIpQdyEs4gAPRTqxgXdcuQGVhjg+gS+ObwAAAABJRU5ErkJggg=="/>
+<text x="24" y="220" font-size="11">Top: actual icon size. Bottom: 5× pixel detail. Synthetic values.</text>
+</g></svg>
