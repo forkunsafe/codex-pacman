@@ -2,7 +2,7 @@
 
 **A tiny SwiftBar plugin that tracks your Codex limits — and eats them.**
 
-A monochrome Pac-Man stays quietly in your menu bar. Click it for your remaining Codex quota and reset times. When you consume another whole percentage point, Pac-Man briefly eats dots and says **om nom nom**.
+A monochrome Pac-Man stays quietly in your menu bar. Click it for your remaining Codex quota and reset times. When you consume another whole percentage point, Pac-Man gives two compact gold pulses, then stays gold for 12 seconds without expanding the menu bar item.
 
 Codex Pac-Man is an independent community project. It is not affiliated with, endorsed by, or sponsored by OpenAI. Codex and Pac-Man names belong to their respective owners. The small geometric icon is drawn by this project; no game artwork or sounds are included.
 
@@ -41,7 +41,7 @@ Homebrew installs Python and the program files. The second command discovers you
 
 Homebrew deliberately does not write to your personal SwiftBar folder during formula installation. There is no administrator prompt, service, or authentication step in `codex-pacman install`. Use `codex-pacman install --help` for options, including `--plugin-dir` and `--codex-home`.
 
-For an existing installation made with `install.py`, Option-click its icon and disable only Codex Pac-Man, migrate it, then re-enable it:
+For an existing installation made with `install.py`, open its SwiftBar submenu, go to Settings → Plugins, and disable only Codex Pac-Man, migrate it, then re-enable it:
 
 ```sh
 codex-pacman install --update
@@ -105,11 +105,13 @@ Dropdown text uses macOS's adaptive system text color, including bold remaining 
 
 Informational rows use a harmless native stdin action to remain enabled with the system text color. Clicking them does not refresh quota, start a process, or change settings. Only Refresh now triggers a manual request.
 
-Standard SwiftBar, Run in Terminal, Disable Plugin, About, and duplicate update-time items are hidden from the normal dropdown. **Option-click the Pac-Man icon** to reveal SwiftBar controls, including settings, refresh, and disabling this plugin. The plugin’s own Refresh now action remains visible.
+The native **SwiftBar** submenu is always visible, providing a working path to Settings without relying on Option-click. Run in Terminal, Disable Plugin, About, and the duplicate update-time item remain hidden. The plugin’s Refresh now and Preview animation actions are visible.
 
 The dropdown shows both windows when available, actual durations from the server (commonly 5 hours and one week), remaining percentages, ten-cell bars, relative reset times, absolute times in the local timezone, and the last successful update. A missing window, duration, or reset timestamp is identified without assuming a 5-hour/weekly mapping.
 
-Consumption in either window can trigger one **1.9-second animation** (six 150 ms eating frames, then two 500 ms mouth frames keeping the final message visible for one second), even if several percent were consumed between polls. Pac-Man opens/closes its mouth, dots disappear, and `om nom nom` stays visible for one second. It then returns to the normal or warning display. There is no sound or notification.
+Consumption in either window triggers two gold pulses lasting **1.2 seconds** in total. The icon then remains gold for **12 seconds**, returning automatically to the normal monochrome icon. The canvas stays 16 points wide throughout: there are no dots, labels, or menu bar width changes. Existing warning percentages remain visible during the effect. Separate light/dark icon colors keep the gold visible in both appearances.
+
+Use **Preview animation** to try the effect without fetching quota, saving state, or changing the consumption baseline. Explicit preview works even if automatic animation is disabled. The afterglow uses an idle selector timeout; it does not postpone polling, block manual refresh, or create a timer process. There is no sound or notification.
 
 Only consecutive, trustworthy observations of the same window duration and reset timestamp are compared. First startup, process restart, errors, backwards clocks, gaps over 90 seconds, missing reset metadata, usage decreases, and quota resets establish a baseline without animating the affected change. Each window is tracked independently. State is committed before animation, so an interrupted animation is never replayed. This deliberately favors missing an animation over showing a misleading one.
 
@@ -166,7 +168,7 @@ For Homebrew installations:
 brew upgrade forkunsafe/tap/codex-pacman
 ```
 
-The links follow the active Homebrew version without recopying files. SwiftBar can cache the old launcher metadata, so after upgrading, Option-click the icon and disable only this plugin, then reconnect it:
+The links follow the active Homebrew version without recopying files. SwiftBar can cache the old launcher metadata, so after upgrading, open SwiftBar → Settings → Plugins from the plugin menu and disable only this plugin, then reconnect it:
 
 ```sh
 codex-pacman install --update
@@ -174,7 +176,7 @@ codex-pacman install --update
 
 Re-enable only Codex Pac-Man in SwiftBar. This refreshes the code links and metadata while preserving native settings and state; no files need to be copied manually.
 
-To uninstall, Option-click the icon and disable **only Codex Pac-Man**, then remove its user-level connection before removing the Homebrew program:
+To uninstall, open SwiftBar → Settings → Plugins and disable **only Codex Pac-Man**, then remove its user-level connection before removing the Homebrew program:
 
 ```sh
 codex-pacman uninstall

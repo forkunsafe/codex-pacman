@@ -9,13 +9,12 @@ import sys
 import time
 from core import MonitorError, codex_home, consumed, executable, load_state, parse_limits, save_state, state_directory
 from rpc import RPC
-from ui import animation_frames, render
+from ui import GOLD_FRAME, GOLD_SECONDS, animation_frames, render
 
 POLL_SECONDS = 60
 
 
 def emit(content):
-    # Trailing separators commit complete frames, even if pipe reads are split.
     sys.stdout.write(content + '~~~\n')
     sys.stdout.flush()
 
@@ -29,13 +28,50 @@ def poll(home):
         return parse_limits(rpc.request('account/rateLimits/read'))
 
 
-def wait_for_refresh(selector, request_started=None):
-    """Wait for the poll deadline or explicit refresh; noop never retries RPC."""
+class Display:
+    """Keep transient visual feedback separate from quota and persisted state."""
+    def __init__(self, name, windows=None, updated=0, error=None):
+        self.name = name
+        self.windows = windows or {}
+        self.updated = updated
+        self.error = error
+        self.gold_until = 0
+
+    def show(self, frame=None):
+        if frame is None and time.monotonic() < self.gold_until:
+            frame = GOLD_FRAME
+        emit(render(self.windows, self.updated, time.time(), self.name, self.error, frame))
+
+    def pulse(self):
+        # Explicit preview also works when automatic animation is disabled.
+        try:
+            for frame in animation_frames():
+                self.show(frame)
+                time.sleep(frame[2])
+        except BaseException:
+            self.gold_until = 0
+            self.show()
+            raise
+        self.gold_until = time.monotonic() + GOLD_SECONDS
+        self.show()
+
+
+def wait_for_refresh(selector, request_started=None, display=None):
+    """Preview and afterglow do not fetch quota or postpone the polling deadline."""
     deadline = time.monotonic() + POLL_SECONDS
     pending = b''
     while True:
-        events = selector.select(max(0, deadline - time.monotonic()))
+        now = time.monotonic()
+        if now >= deadline:
+            return
+        expires_first = display is not None and 0 < display.gold_until < deadline
+        timeout = max(0, display.gold_until - now) if expires_first else deadline - now
+        events = selector.select(timeout)
         if not events:
+            if expires_first:
+                display.gold_until = 0
+                display.show()
+                continue
             return
         data = os.read(sys.stdin.fileno(), 4096)
         if not data:
@@ -49,6 +85,8 @@ def wait_for_refresh(selector, request_started=None):
                 if request_started is not None:
                     time.sleep(max(0, 2 - (time.monotonic() - request_started)))
                 return
+            if b'preview' in commands and display is not None:
+                display.pulse()
 
 
 def run(once=False):
@@ -58,7 +96,6 @@ def run(once=False):
     home = codex_home(env)
     instance = env.get('SWIFTBAR_PLUGIN_PATH', str(Path(__file__).resolve().parent.parent / 'codex-pacman.sh'))
     directory = state_directory(home, instance)
-    # Hold the lock for the entire stream, preventing overlapping instances/RPC.
     with (directory / 'instance.lock').open('a') as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -66,8 +103,9 @@ def run(once=False):
             raise MonitorError('Another instance is stopping. Will retry automatically; Refresh now retries sooner.') from None
         state = load_state(directory / 'state.json')
         windows, updated = state.get('windows', {}), state.get('updated', 0)
-        emit(render(windows, updated, time.time(), name, 'Refreshing quota…'))
-        certain = False  # A restart always establishes a new animation baseline.
+        display = Display(name, windows, updated, 'Refreshing quota…')
+        display.show()
+        certain = False
         with selectors.DefaultSelector() as selector:
             try:
                 selector.register(sys.stdin, selectors.EVENT_READ)
@@ -79,26 +117,21 @@ def run(once=False):
                     current = poll(home)
                     now = time.time()
                     play = consumed(windows, current, updated, now, certain)
-                    # Commit before animation: a restart cannot replay this event.
                     save_state(directory / 'state.json', current, now)
                     windows, updated, certain = current, now, True
+                    display.windows, display.updated, display.error = windows, updated, None
                     if play and animate and not once:
-                        try:
-                            for frame in animation_frames():
-                                emit(render(windows, updated, time.time(), name, frame=frame))
-                                time.sleep(frame[2])
-                        finally:
-                            emit(render(windows, updated, time.time(), name))
+                        display.pulse()
                     else:
-                        emit(render(windows, updated, now, name))
-                except (MonitorError, OSError):
-                    exc = sys.exc_info()[1]
-                    message = str(exc) if isinstance(exc, MonitorError) else 'Local I/O failed. Check Codex installation and plugin state-directory permissions.'
+                        display.show()
+                except (MonitorError, OSError) as exc:
+                    display.error = str(exc) if isinstance(exc, MonitorError) else 'Local I/O failed. Check Codex installation and plugin state-directory permissions.'
+                    display.gold_until = 0
                     certain = False
-                    emit(render(windows, updated, time.time(), name, message))
+                    display.show()
                 if once:
                     return
-                wait_for_refresh(selector, request_started)
+                wait_for_refresh(selector, request_started, display)
 
 
 def main():
@@ -112,20 +145,19 @@ def main():
             return
         except (MonitorError, OSError) as exc:
             message = str(exc) if isinstance(exc, MonitorError) else 'Cannot create private plugin state. Check your home-directory permissions.'
+            display = Display(os.environ.get('VAR_DISPLAY_NAME', 'Codex'), error=message)
             try:
-                emit(render({}, 0, time.time(), os.environ.get('VAR_DISPLAY_NAME', 'Codex'), message))
+                display.show()
             except BrokenPipeError:
                 return
             if '--once' in sys.argv:
                 return
-            # Invalid settings also recover without restarting SwiftBar.
             with selectors.DefaultSelector() as selector:
                 try:
                     selector.register(sys.stdin, selectors.EVENT_READ)
                 except (OSError, ValueError):
                     pass
-                wait_for_refresh(selector)
-
+                wait_for_refresh(selector, display=display)
 
 
 if __name__ == '__main__':

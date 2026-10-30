@@ -1,6 +1,6 @@
 #!/bin/sh
 # <xbar.title>Codex Pac-Man</xbar.title>
-# <xbar.version>1.0.3</xbar.version>
+# <xbar.version>1.0.4</xbar.version>
 # <xbar.author>forkunsafe</xbar.author>
 # <xbar.author.github>forkunsafe</xbar.author.github>
 # <xbar.abouturl>https://github.com/forkunsafe/codex-pacman</xbar.abouturl>
@@ -10,13 +10,13 @@
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
 # <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>
 # <swiftbar.hideDisablePlugin>true</swiftbar.hideDisablePlugin>
-# <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
+# <swiftbar.hideSwiftBar>false</swiftbar.hideSwiftBar>
 # <swiftbar.type>streamable</swiftbar.type>
 # <swiftbar.runInBash>false</swiftbar.runInBash>
 # <swiftbar.useTrailingStreamSeparator>true</swiftbar.useTrailingStreamSeparator>
 # <xbar.var>string(VAR_CODEX_HOME=""): Codex Home: optional directory; empty uses CODEX_HOME or ~/.codex.</xbar.var>
 # <xbar.var>string(VAR_DISPLAY_NAME="Codex"): Display Name: dropdown heading only.</xbar.var>
-# <xbar.var>boolean(VAR_ENABLE_ANIMATION=true): Enable Animation: eat dots when usage increases.</xbar.var>
+# <xbar.var>boolean(VAR_ENABLE_ANIMATION=true): Enable Animation: pulse gold when usage increases.</xbar.var>
 # GUI applications may not inherit a shell's Homebrew PATH.
 for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
     if [ -x "$candidate" ] && "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 9))' 2>/dev/null; then

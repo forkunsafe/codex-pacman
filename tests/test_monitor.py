@@ -98,17 +98,65 @@ class Animation(unittest.TestCase):
 
     def test_animation_and_return(self):
         windows = core.parse_limits(fixture())
-        frames = [ui.render(windows, 1000, 1010, frame=f) for f in ui.animation_frames()]
-        self.assertEqual(len(frames), 8)
         timing = ui.animation_frames()
-        self.assertAlmostEqual(sum(f[2] for f in timing if f[1] == 'om nom nom'), 1.0)
-        self.assertAlmostEqual(sum(f[2] for f in timing), 1.9)
-        self.assertIn('om nom nom', frames[-1])
+        self.assertEqual(len(timing), 6)
+        self.assertAlmostEqual(sum(f[2] for f in timing), 1.2)
+        self.assertEqual(ui.GOLD_SECONDS, 12)
+        for frame in timing + [ui.GOLD_FRAME]:
+            header = ui.render(windows, 1000, 1010, frame=frame).splitlines()[0]
+            self.assertTrue(header.startswith(' | '))
+            self.assertIn(' width=16 height=16 ', header)
+            self.assertNotIn('om nom nom', header)
         normal = ui.render(windows, 1000, 1010)
-        self.assertNotIn('om nom nom', normal)
         self.assertTrue(normal.startswith(' | templateImage='))
-        self.assertIn(' width=16 height=16 ', normal.splitlines()[0])
-        self.assertNotIn('imageWidth', normal)
+
+    def test_pulse_afterglow_and_return_do_not_poll_or_write_state(self):
+        windows = core.parse_limits(fixture())
+        display = main.Display('Codex', windows, 1000)
+        output = io.StringIO()
+        with patch.object(main.time, 'sleep'), patch.object(main.time, 'monotonic', return_value=100), patch.object(main, 'poll') as poll, patch.object(main, 'save_state') as save, contextlib.redirect_stdout(output):
+            display.pulse()
+        self.assertEqual(display.gold_until, 112)
+        self.assertEqual(display.windows, windows)
+        self.assertEqual(display.updated, 1000)
+        poll.assert_not_called()
+        save.assert_not_called()
+        with patch.object(main.time, 'monotonic', return_value=113), contextlib.redirect_stdout(output):
+            display.show()
+        self.assertIn(' | image=', output.getvalue())
+        self.assertIn(' | templateImage=', output.getvalue().split('~~~')[-2])
+
+    def test_afterglow_expiry_keeps_original_poll_deadline(self):
+        class Clock:
+            now = 100
+        clock = Clock()
+        class Selector:
+            delays = []
+            def select(self, delay):
+                self.delays.append(delay)
+                clock.now += delay
+                return []
+        selector = Selector()
+        display = main.Display('Codex', core.parse_limits(fixture()), 1000)
+        display.gold_until = 112
+        with patch.object(main.time, 'monotonic', side_effect=lambda: clock.now), patch.object(main, 'emit') as emit:
+            main.wait_for_refresh(selector, display=display)
+        self.assertEqual(selector.delays, [12, 48])
+        self.assertEqual(clock.now, 160)
+        self.assertEqual(display.gold_until, 0)
+        self.assertIn('templateImage=', emit.call_args.args[0].splitlines()[0])
+
+    def test_preview_does_not_hide_critical_warning(self):
+        header = ui.render(core.parse_limits(fixture(100, 95)), 1000, 1010, frame=ui.GOLD_FRAME).splitlines()[0]
+        self.assertTrue(header.startswith('! 0% | image='))
+        self.assertIn('color=red', header)
+
+    def test_pulse_interrupt_restores_monochrome(self):
+        display = main.Display('Codex', core.parse_limits(fixture()), 1000)
+        with patch.object(main.time, 'sleep', side_effect=SystemExit()), patch.object(main, 'emit') as emit:
+            with self.assertRaises(SystemExit): display.pulse()
+        self.assertEqual(display.gold_until, 0)
+        self.assertIn('templateImage=', emit.call_args.args[0].splitlines()[0])
 
 
 class UI(unittest.TestCase):
@@ -150,7 +198,7 @@ class UI(unittest.TestCase):
         for used, color in [(29, ui.HEALTHY), (64, ui.MODERATE), (80, ui.WARNING), (95, ui.CRITICAL), (100, ui.CRITICAL)]:
             output = ui.render(core.parse_limits(fixture(used, used)), 1000, 1010)
             for line in output.splitlines()[2:]:
-                if line != '---' and not line.startswith('Refresh now'):
+                if line != '---' and not line.startswith(('Refresh now', 'Preview animation')):
                     self.assertIn('stdin=noop', line)
                     if 'font=Menlo size=11' not in line:
                         self.assertNotIn('color=', line)
@@ -158,6 +206,7 @@ class UI(unittest.TestCase):
             self.assertEqual(len(bars), 2)
             self.assertTrue(all('color=' + color in line for line in bars))
             self.assertIn('Refresh now | stdin=refresh', output)
+            self.assertIn('Preview animation | stdin=preview', output)
         stale = ui.render(core.parse_limits(fixture()), 1000, 1200)
         self.assertNotIn(ui.HEALTHY, stale)
         self.assertNotIn(ui.MODERATE, stale)
@@ -173,10 +222,12 @@ class UI(unittest.TestCase):
                 dark, light = sorted((luminance(foreground), luminance(background)))
                 self.assertGreaterEqual((light+.05)/(dark+.05), 3.0)
 
-    def test_standard_controls_are_option_click_only(self):
+    def test_swiftbar_controls_remain_accessible_without_option_click(self):
         metadata = (MODULES.parent/'codex-pacman.sh').read_text()
-        for field in ('hideAbout', 'hideRunInTerminal', 'hideLastUpdated', 'hideDisablePlugin', 'hideSwiftBar'):
+        for field in ('hideAbout', 'hideRunInTerminal', 'hideLastUpdated', 'hideDisablePlugin'):
             self.assertIn('<swiftbar.%s>true</swiftbar.%s>' % (field, field), metadata)
+        self.assertIn('<swiftbar.hideSwiftBar>false</swiftbar.hideSwiftBar>', metadata)
+        self.assertNotIn('Option-click for SwiftBar controls', ui.render({}, 0, 1))
 
     def test_png(self):
         import base64
@@ -258,6 +309,26 @@ class RPC(unittest.TestCase):
                 with self.assertRaises(SystemExit): main.run()
             self.assertEqual(poll.call_count, 1)
 
+    def test_preview_command_does_not_trigger_rpc_or_state_write(self):
+        class Clock:
+            now = 100
+        clock = Clock()
+        class Selector:
+            count = 0
+            def select(self, delay):
+                self.count += 1
+                if self.count == 1: return [object()]
+                clock.now += delay
+                return []
+        display = main.Display('Codex', core.parse_limits(fixture()), 1000)
+        def pause(delay): clock.now += delay
+        with patch.object(main.time, 'monotonic', side_effect=lambda: clock.now), patch.object(main.time, 'sleep', side_effect=pause), patch.object(main.os, 'read', return_value=b'preview\n'), patch.object(main, 'emit') as emit, patch.object(main, 'poll') as poll, patch.object(main, 'save_state') as save:
+            main.wait_for_refresh(Selector(), display=display)
+        poll.assert_not_called()
+        save.assert_not_called()
+        self.assertAlmostEqual(clock.now, 160)
+        self.assertIn('templateImage=', emit.call_args.args[0].splitlines()[0])
+
     def test_information_click_does_not_retry_a_setup_error(self):
         class Selector:
             count = 0
@@ -290,12 +361,12 @@ class RPC(unittest.TestCase):
                 def __exit__(self, *_): pass
                 def register(self, *_): pass
                 def select(self, *_): return []
-            with patch.object(main, 'codex_home', return_value=Path(temporary)), patch.object(main, 'state_directory', return_value=Path(temporary)), patch.object(main, 'poll', side_effect=fake_poll), patch.object(main.selectors, 'DefaultSelector', Selector), patch.object(main.time, 'sleep'), contextlib.redirect_stdout(output):
+            with patch.object(main, 'codex_home', return_value=Path(temporary)), patch.object(main, 'state_directory', return_value=Path(temporary)), patch.object(main, 'poll', side_effect=fake_poll), patch.object(main.selectors, 'DefaultSelector', Selector), patch.object(main.Display, 'pulse', autospec=True) as pulse, contextlib.redirect_stdout(output):
                 with self.assertRaises(SystemExit): main.run()
             # Events 10→11 and 13→14 only; recovery 11→13 is suppressed.
-            self.assertEqual(output.getvalue().count('om nom nom'), 4)
+            self.assertEqual(pulse.call_count, 2)
             self.assertTrue(output.getvalue().endswith('~~~\n'))
-            self.assertNotIn('om nom nom', output.getvalue().split('~~~')[-2])
+            self.assertNotIn(' | image=', output.getvalue().split('~~~')[-2])
             self.assertEqual(core.load_state(Path(temporary)/'state.json')['windows']['primary']['used'], 14)
 
 

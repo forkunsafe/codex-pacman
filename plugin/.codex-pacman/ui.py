@@ -36,9 +36,10 @@ def clean(text):
     return value.strip().lstrip('-')[:180] or 'Codex'
 
 
-@functools.lru_cache(maxsize=3)
-def icon(open_mouth=True, dots=False):
-    width, height, scale = (44 if dots else 16), 16, 2
+@functools.lru_cache(maxsize=6)
+def icon(open_mouth=True, gold=False, dark=False):
+    width, height, scale = 16, 16, 2
+    rgb = ((255, 211, 58) if dark else (174, 115, 0)) if gold else (0, 0, 0)
     w, h = width * scale, height * scale
     pixels = bytearray()
     for y in range(h):
@@ -48,9 +49,7 @@ def icon(open_mouth=True, dots=False):
             inside = dx * dx + dy * dy <= 42.25
             mouth = abs(math.atan2(dy, dx)) < (.62 if open_mouth else .12)
             filled = inside and not mouth
-            if dots:
-                filled |= any(((x + .5) / scale - cx) ** 2 + dy ** 2 <= 1 for cx in (23, 31, 39))
-            pixels.extend((0, 0, 0, 255 if filled else 0))
+            pixels.extend((*rgb, 255 if filled else 0))
     def chunk(name, data):
         return struct.pack('!I', len(data)) + name + data + struct.pack('!I', zlib.crc32(name + data))
     png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('!2I5B', w, h, 8, 6, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(bytes(pixels))) + chunk(b'IEND', b'')
@@ -93,10 +92,12 @@ def render(windows, updated, now, name='Codex', error=None, frame=None):
     if stale:
         label = '!'
         attrs = 'size=12'
-    if frame is not None:
-        label = frame[1]
-    image = icon(frame[0] if frame else True)
-    header = '%s | templateImage=%s width=16 height=16 %s' % (label, image, attrs)
+    mouth = frame[0] if frame else True
+    if frame is not None and frame[1]:
+        graphic = 'image=' + icon(mouth, gold=True) + ',' + icon(mouth, gold=True, dark=True)
+    else:
+        graphic = 'templateImage=' + icon(mouth)
+    header = '%s | %s width=16 height=16 %s' % (label, graphic, attrs)
     lines = [header, '---', info(clean(name), 'size=13'), '---']
     if stale:
         lines.append(info('Stale data — last successful values' if windows else 'Usage unavailable', 'size=12'))
@@ -120,13 +121,15 @@ def render(windows, updated, now, name='Codex', error=None, frame=None):
     if len(windows) == 1:
         lines.append(info('Only one quota window is available.', 'size=11'))
     lines += ['---', info('Last successful update: ' + (datetime.fromtimestamp(updated).astimezone().strftime('%Y-%m-%d %H:%M:%S %Z') if updated else 'never'), 'size=11'),
-              'Refresh now | stdin=refresh', info('Option-click for SwiftBar controls', 'size=11')]
+              'Refresh now | stdin=refresh', 'Preview animation | stdin=preview']
     return '\n'.join(lines) + '\n'
 
 
+GOLD_SECONDS = 12
+GOLD_FRAME = (True, True, 0)
+
+
 def animation_frames():
-    """Eat dots at 150 ms per frame; keep the final message visible for one second."""
-    return [(True, '· · ·', .15), (False, '· · ·', .15),
-            (True, '· ·', .15), (False, '· ·', .15),
-            (True, '·', .15), (False, '·', .15),
-            (True, 'om nom nom', .5), (False, 'om nom nom', .5)]
+    """Two compact gold pulses; the event loop manages the idle gold afterglow."""
+    return [(False, True, .2), (True, False, .15), (True, True, .25),
+            (False, True, .2), (True, False, .15), (True, True, .25)]

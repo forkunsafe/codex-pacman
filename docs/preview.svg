@@ -5,11 +5,11 @@
  <rect x="28" y="82" width="624" height="35" rx="9" fill="#d8dbe1"/>
  <path d="M 68 90 A 10 10 0 1 0 68 108 L 59 99 Z" fill="#252931"/>
  <text x="88" y="104" font-family="Helvetica,sans-serif" font-size="12" fill="#454b55">Quiet by default</text>
- <path d="M 286 90 A 10 10 0 1 0 286 108 L 277 99 Z" fill="#252931"/>
- <text x="297" y="104" font-family="Helvetica,sans-serif" font-size="12" fill="#252931">· ·   →   om nom nom</text>
+ <path d="M 286 90 A 10 10 0 1 0 286 108 L 277 99 Z" fill="#AE7300"/>
+ <text x="297" y="104" font-family="Helvetica,sans-serif" font-size="12" fill="#252931">Two pulses · 12 s gold</text>
  <path d="M 542 90 A 10 10 0 1 0 542 108 L 533 99 Z" fill="#252931"/>
  <text x="552" y="104" font-family="Helvetica,sans-serif" font-size="13" fill="#ba2634">! 9%</text>
- <rect x="28" y="132" width="320" height="292" rx="12" fill="#fff"/>
+ <rect x="28" y="132" width="320" height="306" rx="12" fill="#fff"/>
  <g font-family="-apple-system,Helvetica,sans-serif" fill="#20232a" font-size="13">
  <text x="44" y="158" font-weight="bold">Codex</text>
  <path d="M44 170H332" stroke="#e3e5e9"/>
@@ -23,7 +23,8 @@
  <text x="53" y="348" fill="#20232a" font-size="12">Resets in 3d 7h</text>
  <path d="M44 361H332" stroke="#e3e5e9"/>
  <text x="44" y="382" fill="#20232a" font-size="12">Last successful update: 21:32</text>
- <text x="44" y="407">Refresh now</text>
+ <text x="44" y="403">Refresh now</text>
+ <text x="44" y="424">Preview animation</text>
  <text x="378" y="170" font-size="15" font-weight="bold">Small footprint. Real limits.</text>
  <text x="378" y="200">One selected Codex environment</text>
  <text x="378" y="228">Native SwiftBar settings</text>
